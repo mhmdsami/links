@@ -28,7 +28,7 @@ app.get("/:code", async (c) => {
   const code = c.req.param("code");
   const [data] = await db.select().from(link).where(eq(link.code, code));
 
-  if (data) {
+  if (!data) {
     return c.json(
       { success: false, message: "Link not found" },
       { status: 404 },
@@ -79,7 +79,7 @@ app.patch(
     const code = c.req.param("code");
     const [data] = await db.select().from(link).where(eq(link.code, code));
 
-    if (data) {
+    if (!data) {
       return c.json(
         { success: false, message: "Link not found" },
         { status: 404 },
@@ -99,7 +99,7 @@ app.delete("/:code", async (c) => {
   const code = c.req.param("code");
   const [data] = await db.select().from(link).where(eq(link.code, code));
 
-  if (data) {
+  if (!data) {
     return c.json(
       { success: false, message: "Link not found" },
       { status: 404 },
