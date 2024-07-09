@@ -20,3 +20,7 @@ export const link = sqliteTable("link", {
 export const insertLinkSchema = createInsertSchema(link, {
   url: z.string().url(),
 });
+
+export const updateLinkSchema = z.object({
+  url: z.string().url(),
+});

@@ -56,9 +56,7 @@
       "indexes": {
         "link_code_unique": {
           "name": "link_code_unique",
-          "columns": [
-            "code"
-          ],
+          "columns": ["code"],
           "isUnique": true
         }
       },

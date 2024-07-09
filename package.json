@@ -1,7 +1,9 @@
 {
   "name": "links",
   "scripts": {
-    "dev": "bun run --hot src/index.ts"
+    "dev": "bun run --hot src/index.ts",
+    "migrate": "bun run src/utils/migrate.ts",
+    "generate": "bun drizzle-kit generate"
   },
   "dependencies": {
     "drizzle-orm": "^0.31.4",
