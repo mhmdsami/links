@@ -1,5 +1,7 @@
+import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { bearer } from "better-auth/plugins";
 import db from "../utils/db";
 
 /**
@@ -26,4 +28,10 @@ export const auth = betterAuth({
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
+  plugins: [
+    // Deep-link handoff for the Expo app (linx://) and bearer-token sessions
+    // for native clients that cannot use host-only cookies.
+    expo(),
+    bearer(),
+  ],
 });
