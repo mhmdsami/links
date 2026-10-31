@@ -1,6 +1,8 @@
 # links monorepo — status
 
 Date: 2026-10-31. Local only; nothing pushed, no remote server access.
+`main` is 9 commits ahead of `origin/main` and the tree is clean after this
+docs commit.
 
 ## Versions (LTS / latest stable, Oct 2026)
 
@@ -66,7 +68,11 @@ Commits:
 - `525c92e refactor: move api into api workspace`
 - `41d049d feat: import expo app from linx` (subtree, squashed content commit `5064358`)
 - `a580bcb feat: restructure into api web and app monorepo`
-- `STATUS.md` commit: HEAD after this file is committed.
+- `db1b656 docs: add monorepo status`
+- `76927ac chore: upgrade runtimes and dependencies to latest stable`
+- `82f4ddf feat(api): add bearer and expo auth plugins`
+- `37734a7 feat(app): migrate authentication to better-auth`
+- this docs commit (STATUS + README updates) is HEAD.
 
 The Expo app was imported with `git subtree add --prefix app
 git@github.com:mhmdsami/linx.git main --squash`; linx history is present as a
@@ -82,8 +88,13 @@ squashed subtree commit, not per-commit.
 - better-auth wiring applied: handler mount in `src/index.ts`, session
   middleware in `src/routes/links.ts`, CORS with credentials for the web origin,
   local `src/lib/auth.ts` base mirror.
-- `docs/auth-wiring.patch` holds all three hunks (the two requested patches +
-  CORS). Apply it from inside `api/` on the server checkout.
+- `src/lib/auth.ts` now enables the `expo()` and `bearer()` plugins: the Expo
+  app signs in through `/expo-authorization-proxy` and calls `/admin/link/*`
+  with `Authorization: Bearer <session-token>`.
+- Auth origin config is `TRUSTED_ORIGINS` everywhere (code, `.env.example`,
+  README, this file); `WEB_ORIGIN` does not exist in the repo.
+- `docs/auth-wiring.patch` holds the two route hunks + CORS. It does **not**
+  touch `src/lib/auth.ts`; the server copy needs the plugin additions below.
 - Scripts: `dev`, `migrate`, `generate`, `types`, `test` (bun test), `gate`.
   Tests: `src/schema/index.test.ts` (4 cases).
 - Per-package lefthook/commitlint files removed; root owns hooks.
@@ -102,7 +113,8 @@ squashed subtree commit, not per-commit.
 
 - Upgraded from Expo SDK 51 to **SDK 58** (Expo 58.0.21, React Native 0.88.1,
   React 19.3.0, expo-router 58.0.28, React 19-safe module versions). `npm install`
-  and `npx expo install --check` are clean, `npx expo-doctor` passes 20/20.
+  and `npx expo install --check` are clean; `npx expo-doctor` was 20/20 at the
+  time and is 19/20 now because newer patch releases appeared (see Verification).
 - Added `types`, `test` (placeholder → types), `lint` (`eslint .`), `gate`;
   migrated to ESLint 9 flat config (`eslint.config.js`); `package-lock.json` so
   `npm ci` works. Removed the stale `bun.lockb` (npm-only package).
@@ -114,8 +126,21 @@ squashed subtree commit, not per-commit.
   Gradle 9.4.1; release build still uses Expo's debug signing.
 - CI workflow lives at root: `.github/workflows/app-android.yml` (Node 24,
   Temurin 21).
-- Legacy auth: still stores domain + `ADMIN_TOKEN` in SecureStore. Must migrate
-  to better-auth before the API session middleware ships.
+- Auth migrated from domain + `ADMIN_TOKEN` to better-auth sessions:
+  - `app/lib/auth-client.ts` — `createAuthClient` + `@better-auth/expo` client
+    plugin (`scheme: "linx"`, SecureStore cookie jar). Base URL comes from
+    `EXPO_PUBLIC_API_URL`, default `https://api.links.sam1.space`.
+  - `app/lib/session.ts` — extracts the signed session cookie, stores it under
+    `STORAGE_KEYS.TOKEN`, and builds `Authorization: Bearer <token>` headers.
+    Also clears the legacy `domain` + `ADMIN_TOKEN` keys on startup so a stale
+    token is never sent.
+  - `config` screen is now Google sign-in / sign-out plus the API URL; the
+    create, list, edit, and delete screens call the API origin directly. Link
+    copy uses the API host (`https://<api-host>/<code>`).
+  - Added `better-auth@1.7.14`, `@better-auth/expo@1.7.14`, `expo-network`.
+    `.npmrc` sets `legacy-peer-deps=true` because better-call declares an
+    optional zod 4 peer while the app stays on zod 3; `npm ci` works with it.
+  - Gate: tsc clean, eslint 0 errors / 0 warnings.
 
 ## Verification (all run locally)
 
@@ -137,12 +162,17 @@ NEXT_PUBLIC_API_URL=https://api.links.sam1.space npm run gate
 
 cd ../app
 npm ci
-npx expo-doctor               # 20/20 checks pass
-npm run gate                  # tsc clean, eslint 0 errors / 5 warnings
+npx expo-doctor               # 19/20; 3 patch-level SDK 58 updates published after this pass
+npm run gate                  # tsc clean, eslint 0 errors / 0 warnings
 
 cd ..
 BUN_BIN="npx --yes bun@1.4.4" npm run gate   # all three, exit 0
 ```
+
+`expo-doctor` reports newer patch releases for `expo` (58.0.22 vs 58.0.21),
+`expo-router` (58.0.29 vs 58.0.28), and `@expo/metro-runtime` (58.0.16 vs
+58.0.15). These appeared in the registry after the previous pass; versions were
+not bumped in this change.
 
 Bun is not installed globally on this Mac; the API gate used
 `npx bun@1.4.4`. `scripts/gate.sh` accepts `BUN_BIN` for this. Root commitlint
@@ -160,7 +190,7 @@ deploy were not executed: no Android SDK locally and no Cloudflare credentials.
    Put `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in the API env.
 2. **API env** on the server: `DATABASE_URL`, `BETTER_AUTH_URL`,
    `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
-   `TRUSTED_ORIGINS=https://links.sam1.space`.
+   `TRUSTED_ORIGINS=https://links.sam1.space,linx://`.
 3. **Cloudflare** — Worker `links-web`, custom domain `links.sam1.space` (or
    edit `web/wrangler.jsonc`), token with Workers + DNS. GitHub repository
    needs:
@@ -177,27 +207,66 @@ deploy were not executed: no Android SDK locally and no Cloudflare credentials.
    `cd <checkout>/api && git apply docs/auth-wiring.patch` (review with
    `git apply --check` first), then `bun install && bun run migrate`, restart.
 
-## Server-side follow-up (ops, do not attempt here)
+## Server deployment handoff (ops, do not attempt here)
 
-The API checkout now lives inside a monorepo, so the systemd unit must change:
+The code is ready but not pushed. Once the user pushes `main`, ops should:
 
-- `WorkingDirectory` must point at the `api/` directory (e.g. the server's
-  equivalent of `<repo>/api`), not the repository root.
-- `ExecStart` must still run `src/index.ts` from that directory (e.g.
-  `bun run src/index.ts` / `bun run dev` as configured today); update any
-  relative paths.
-- Re-run `bun install`, ensure `.env` is present in `api/`, run
-  `bun run migrate`, then restart the service.
-- Apply `api/docs/auth-wiring.patch` and verify:
-  - `GET /api/auth/get-session` responds (200, null body when signed out).
-  - `GET /admin/link/all` returns 401 without a session cookie.
+1. **Checkout** the monorepo on the server and enter the API workspace:
+   `cd <repo>/api`.
+2. **Install** `bun install --frozen-lockfile` (picks up the new
+   `@better-auth/expo` dependency).
+3. **Env** in `api/.env`:
+   - `DATABASE_URL`, `BETTER_AUTH_URL=https://api.links.sam1.space`,
+     `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+   - `TRUSTED_ORIGINS=https://links.sam1.space,linx://`
+     (add `http://localhost:3001` only if the web app is run locally against
+     this API; add `exp://**` only for Expo Go development).
+4. **Routes patch**, if not already applied:
+   `git apply --check docs/auth-wiring.patch && git apply docs/auth-wiring.patch`.
+   If reverse-check succeeds, it is already applied — do not re-apply.
+5. **Canonical auth config** (`src/lib/auth.ts` on the server) must match the
+   new plugin wiring:
 
-The ops session owns this; this session did not touch the server.
+   ```ts
+   import { expo } from "@better-auth/expo";
+   import { bearer } from "better-auth/plugins";
+
+   export const auth = betterAuth({
+     // ...existing baseURL / secret / database / socialProviders / trustedOrigins
+     plugins: [expo(), bearer()],
+   });
+   ```
+
+   Without `bearer()` the app's `Authorization: Bearer` requests 401. Without
+   `expo()` the app's Google flow hits a missing `/expo-authorization-proxy`.
+6. **Migrate**: `bun run migrate`. Auth tables (`user`, `session`, `account`,
+   `verification`) are still assumed to exist on the server; if they do not,
+   generate them from the canonical better-auth schema before restarting.
+7. **systemd unit**: `WorkingDirectory` must be `<repo>/api` (not the repo
+   root), and `ExecStart` must run `src/index.ts` from there.
+   `systemctl restart links-api` (use the real unit name).
+8. **Smoke tests**:
+   - `curl -i https://api.links.sam1.space/` → 200 healthy.
+   - `curl -i https://api.links.sam1.space/api/auth/get-session` → 200, null
+     body when signed out.
+   - `curl -i https://api.links.sam1.space/admin/link/all` → 401.
+   - `curl -i -H "Authorization: Bearer nope" .../admin/link/all` → 401.
+   - From the app: Google sign-in → create/list/edit/delete a link.
+   - From the web dashboard: Google sign-in still works (cookie path).
+
+No new Google Cloud redirect URI is needed for the app: native sign-in still
+uses the API's `/api/auth/callback/google` web redirect.
 
 ## Unresolved / caveats
 
-- Expo app still uses `ADMIN_TOKEN`; deploying the new middleware breaks it
-  until the app moves to better-auth sessions.
+- The app now depends on the new API plugins (`bearer`, `expo`). Until the API
+  is deployed and the server `src/lib/auth.ts` is updated, app sign-in and
+  admin requests will fail. The web dashboard is unaffected.
+- The app's `linx://` scheme must be in the API's `TRUSTED_ORIGINS`; otherwise
+  the expo plugin refuses to append the session cookie to the deep-link
+  redirect.
+- `.npmrc` uses `legacy-peer-deps` because better-call peers zod 4 while the
+  app stays on zod 3. Revisit when better-call's optional peer is relaxed.
 - Android release APK uses Expo's debug signing (no keystore); not store-ready.
   `assembleRelease` itself was not run locally (no Android SDK); `expo prebuild`
   and `expo-doctor` were.

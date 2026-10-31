@@ -100,10 +100,16 @@ Google redirect URI:
 The API must list the web origin in `TRUSTED_ORIGINS`. Keep web and API on the
 same registrable domain so the better-auth session cookie is same-site.
 
-### app
+### app (`app/.env` optional)
 
-No build-time env. The app currently stores an API domain and admin token in
-SecureStore (legacy `ADMIN_TOKEN` flow) — see the follow-up note below.
+| Variable | Required | Example / notes |
+| --- | --- | --- |
+| `EXPO_PUBLIC_API_URL` | no | defaults to `https://api.links.sam1.space` |
+
+Authentication is Google via better-auth. The Expo plugin opens the flow in
+`expo-web-browser` and returns to the `linx://` deep link, so that scheme must
+be listed in the API's `TRUSTED_ORIGINS`. The app sends the resulting session
+token as `Authorization: Bearer <token>` to `/admin/link/*`.
 
 ## CI / deploy
 
@@ -119,7 +125,7 @@ differs.
 
 ## Follow-ups
 
-- The Expo app still authenticates with `ADMIN_TOKEN`; the API has moved to
-  better-auth sessions. Migrate the app before deploying the new middleware.
-- The server checkout must move from the old repo root to `links/api`
-  (systemd `WorkingDirectory` and `ExecStart`). Owned by the ops session.
+- The mono-repo handoff to ops: the server checkout moves from the old repo
+  root to `links/api` (systemd `WorkingDirectory` and `ExecStart`), and the
+  canonical `api/src/lib/auth.ts` needs the `expo()` + `bearer()` plugins.
+  Exact steps are in `STATUS.md`.
