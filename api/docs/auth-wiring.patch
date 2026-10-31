@@ -1,0 +1,57 @@
+diff --git a/src/index.ts b/src/index.ts
+index 09c3391..b8f4391 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -1,4 +1,6 @@
+ import { Hono } from "hono";
++import { cors } from "hono/cors";
++import { auth } from "./lib/auth";
+ import links from "./routes/links";
+ import { link } from "./schema";
+ import db from "./utils/db";
+@@ -6,6 +8,23 @@ import { eq } from "drizzle-orm";
+ 
+ const app = new Hono();
+ 
++const allowedOrigins = (Bun.env.TRUSTED_ORIGINS ?? "")
++  .split(",")
++  .map((origin) => origin.trim())
++  .filter(Boolean);
++
++app.use(
++  "*",
++  cors({
++    origin: (origin) => (allowedOrigins.includes(origin) ? origin : (allowedOrigins[0] ?? "")),
++    credentials: true,
++    allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
++    allowHeaders: ["Content-Type", "Authorization"],
++  }),
++);
++
++app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
++
+ app.get("/", (c) => {
+   return c.json({
+     success: true,
+diff --git a/src/routes/links.ts b/src/routes/links.ts
+index 1ad4efb..ade6009 100644
+--- a/src/routes/links.ts
++++ b/src/routes/links.ts
+@@ -1,5 +1,6 @@
+ import { Hono } from "hono";
+ import { validator } from "hono/validator";
++import { auth } from "../lib/auth";
+ import { insertLinkSchema, link, updateLinkSchema } from "../schema";
+ import db from "../utils/db";
+ import { eq } from "drizzle-orm";
+@@ -7,8 +8,8 @@ import { eq } from "drizzle-orm";
+ const app = new Hono();
+ 
+ app.use(async (c, next) => {
+-  const token = c.req.header("Authorization")?.split(" ")[1];
+-  if (token !== Bun.env.ADMIN_TOKEN) {
++  const session = await auth.api.getSession({ headers: c.req.raw.headers });
++  if (!session?.user) {
+     return c.json({ success: false, message: "Unauthorized" }, { status: 401 });
+   }
+ 

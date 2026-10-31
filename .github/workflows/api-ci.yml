@@ -1,0 +1,42 @@
+name: API CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "api/**"
+      - ".github/workflows/api-ci.yml"
+  pull_request:
+    paths:
+      - "api/**"
+      - ".github/workflows/api-ci.yml"
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: api
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.21
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Create env
+        run: cp .env.example .env
+
+      - name: Migrate
+        run: bun run migrate
+
+      - name: Typecheck
+        run: bun run types
+
+      - name: Test
+        run: bun test

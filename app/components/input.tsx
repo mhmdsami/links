@@ -6,8 +6,10 @@ interface InputProps extends React.ComponentProps<typeof TextInput> {
   errorMessage?: string;
 }
 
-const Input = forwardRef<TextInput, InputProps>(
-  ({ style, errorMessage, ...props }, ref) => {
+const Input = forwardRef<TextInput, InputProps>(function Input(
+  { style, errorMessage, ...props },
+  ref,
+) {
     return (
       <View
         style={{

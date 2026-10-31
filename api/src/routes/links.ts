@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { validator } from "hono/validator";
+import { auth } from "../lib/auth";
 import { insertLinkSchema, link, updateLinkSchema } from "../schema";
 import db from "../utils/db";
 import { eq } from "drizzle-orm";
@@ -7,8 +8,8 @@ import { eq } from "drizzle-orm";
 const app = new Hono();
 
 app.use(async (c, next) => {
-  const token = c.req.header("Authorization")?.split(" ")[1];
-  if (token !== Bun.env.ADMIN_TOKEN) {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  if (!session?.user) {
     return c.json({ success: false, message: "Unauthorized" }, { status: 401 });
   }
 

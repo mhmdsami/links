@@ -21,3 +21,28 @@ bun install
 ```sh
 bun start
 ```
+
+### Checks
+
+```sh
+npm run types   # tsc --noEmit
+npm run lint    # eslint
+npm run gate    # types && lint
+```
+
+Hooks live at the repository root (`lefthook.yml`): `commit-msg` runs
+commitlint, `pre-push` runs the monorepo gate. Install once with
+`npm run hooks:install` at the root.
+
+### Android release build
+
+`.github/workflows/app-android.yml` at the repo root builds a release APK on
+pushes that touch `app/**` (and on manual dispatch): Node 24, Temurin JDK 17,
+`npm ci`, `npx expo prebuild --platform android --clean`, then
+`./gradlew assembleRelease`. The APK is uploaded as the
+`links-app-release-apk` artifact. No signing keystore is configured, so Expo's
+default debug signing is used — add a release keystore before distributing.
+
+Note: the repo ships `bun.lockb`, but the Android workflow uses `npm ci` against
+the committed `package-lock.json`. Keep both in sync, or switch the workflow to
+`bun install --frozen-lockfile`.
