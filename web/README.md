@@ -29,6 +29,12 @@ Keep the web app and API on the same registrable domain (`links.sam1.space`,
 `api.links.sam1.space`) so session cookies are same-site and sent with
 `credentials: "include"`.
 
+## Requirements
+
+- Node.js 24.x LTS (`engines.node: ">=24 <25"`, `.nvmrc` = `24`)
+- npm 11
+- TypeScript 7.0.2 (no LTS; latest stable)
+
 ## Develop
 
 ```bash
@@ -54,7 +60,9 @@ npm run deploy    # opennextjs-cloudflare build && deploy
 npm run preview   # opennextjs-cloudflare build && preview
 ```
 
-Hooks (lefthook): `commit-msg` runs commitlint, `pre-push` runs `npm run gate`.
+Hooks live at the repository root (`lefthook.yml`): `commit-msg` runs
+commitlint, `pre-push` runs the monorepo gate. Install once with
+`npm run hooks:install` at the root.
 
 ## Deploy
 

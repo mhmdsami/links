@@ -1,8 +1,10 @@
 import { COLORS } from "@/constants";
 import { Pressable, StyleProp, Text, ViewStyle } from "react-native";
 
-interface ButtonProps extends React.ComponentProps<typeof Pressable> {
+interface ButtonProps
+  extends Omit<React.ComponentProps<typeof Pressable>, "onPress" | "children"> {
   children: string;
+  onPress?: () => void;
   style?: StyleProp<ViewStyle>;
   variant?: "primary" | "destructive";
 }
@@ -12,6 +14,7 @@ export default function Button({
   children,
   variant = "primary",
   disabled,
+  onPress,
   ...props
 }: ButtonProps) {
   return (
@@ -30,6 +33,7 @@ export default function Button({
         style,
       ]}
       disabled={disabled}
+      onPress={onPress}
       {...props}
     >
       <Text

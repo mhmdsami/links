@@ -16,9 +16,24 @@ Short-link redirects (`GET /:code`) are served by **api**, not by the dashboard.
 
 | Package | Runtime | What it does | Local dev |
 | --- | --- | --- | --- |
-| `api` | Bun | Link CRUD, redirects, better-auth Google sessions | `bun run dev` |
-| `web` | Node 24 / Workers | Sign-in, link management dashboard | `npm run dev` |
-| `app` | Expo SDK 51 | Mobile link management | `npm start` |
+| `api` | Bun 1.4 | Link CRUD, redirects, better-auth Google sessions | `bun run dev` |
+| `web` | Node 24 LTS / Workers | Sign-in, link management dashboard | `npm run dev` |
+| `app` | Expo SDK 58 | Mobile link management | `npm start` |
+
+## Runtime versions (October 2026)
+
+| Tool | Version | Notes |
+| --- | --- | --- |
+| Node.js | 24.x active LTS | `engines.node: ">=24 <25"`, `.nvmrc` = `24`; CI uses `node-version: 24` |
+| Bun | 1.4.x (1.4.4) | latest stable; Bun has no LTS channel, so the major is pinned in `engines.bun` and CI |
+| Java | Temurin 21 LTS | Android CI only |
+| TypeScript | 7.0.2 (api, web); 6.0.3 (app) | no LTS concept; Expo SDK 58's template pins `~6.0.3` |
+| Expo SDK | 58 (RN 0.88.1, React 19.3.0) | SDK 58 supports Node 24 and JDK 21 |
+| Next.js / React | 16.4.3 / 19.3.1 | web |
+| Hono / Drizzle / better-auth | 4.13.14 / 0.45.4 (kit 0.31.11) / 1.7.14 | api, Zod 3.25.76 |
+
+TypeScript and Bun do not have LTS channels; "latest stable" is the policy for
+both. TypeScript 7 is used everywhere it works (Expo 58 pins TS 6).
 
 ## Setup
 
@@ -53,7 +68,7 @@ Run all three from the root:
 ```bash
 npm run gate
 # Bun is required for the api gate; override the binary if needed:
-BUN_BIN="npx --yes bun@1.2.21" npm run gate
+BUN_BIN="npx --yes bun@1.4.4" npm run gate
 ```
 
 `lefthook.yml` at the root runs commitlint on `commit-msg` and the full gate on
@@ -96,8 +111,8 @@ SecureStore (legacy `ADMIN_TOKEN` flow) — see the follow-up note below.
 - `.github/workflows/web-deploy.yml` — `web/**`: npm ci, typecheck, test,
   OpenNext build + Cloudflare deploy. Needs `CLOUDFLARE_API_TOKEN` (secret) and
   `CLOUDFLARE_ACCOUNT_ID`, `NEXT_PUBLIC_API_URL` (variables).
-- `.github/workflows/app-android.yml` — `app/**`: Node 24, Temurin 17, Expo
-  prebuild, Gradle release APK artifact.
+- `.github/workflows/app-android.yml` — `app/**`: Node 24, Temurin 21, Expo
+  SDK 58 prebuild, Gradle release APK artifact.
 
 `web/wrangler.jsonc` binds `links.sam1.space`. Change the route if the domain
 differs.

@@ -4,6 +4,14 @@ API to manage a link collection. Built with Hono, Bun, Drizzle, and SQLite.
 Public link redirects live here: `GET /:code`. The dashboard clients (web, Expo)
 authenticate with better-auth (Google).
 
+## Requirements
+
+- Bun 1.4.x (currently 1.4.4). Bun has **no LTS channel**; the major is pinned in
+  `engines.bun` and CI.
+- Node.js 24.x LTS for tooling (`engines.node: ">=24 <25"`).
+- TypeScript 7.0.2 (no LTS; latest stable).
+- Hono 4.13, Drizzle ORM 0.45 / Kit 0.31, better-auth 1.7, Zod 3.25.
+
 ### To install dependencies:
 
 ```sh

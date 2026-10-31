@@ -1,12 +1,12 @@
 import { COLORS } from "@/constants";
-import { forwardRef } from "react";
+import { forwardRef, type ComponentRef } from "react";
 import { Text, TextInput, View } from "react-native";
 
 interface InputProps extends React.ComponentProps<typeof TextInput> {
   errorMessage?: string;
 }
 
-const Input = forwardRef<TextInput, InputProps>(function Input(
+const Input = forwardRef<ComponentRef<typeof TextInput>, InputProps>(function Input(
   { style, errorMessage, ...props },
   ref,
 ) {

@@ -9,8 +9,14 @@ Client for [links](https://github.com/mhmdsami/links) to manage a link collectio
 ### To install dependencies:
 
 ```sh
-bun install
+npm install
 ```
+
+### Requirements
+
+- Node.js 24.x LTS (`.nvmrc` = `24`)
+- Expo SDK 58 (React Native 0.88.1, React 19.3.0)
+- TypeScript 6.0.3 (Expo SDK 58 pins `~6.0.3`; TypeScript 7 is not used here)
 
 ### Development setup:
 
@@ -19,7 +25,7 @@ bun install
 - Start the devlopment server
 
 ```sh
-bun start
+npm start
 ```
 
 ### Checks
@@ -37,12 +43,11 @@ commitlint, `pre-push` runs the monorepo gate. Install once with
 ### Android release build
 
 `.github/workflows/app-android.yml` at the repo root builds a release APK on
-pushes that touch `app/**` (and on manual dispatch): Node 24, Temurin JDK 17,
+pushes that touch `app/**` (and on manual dispatch): Node 24, Temurin JDK 21,
 `npm ci`, `npx expo prebuild --platform android --clean`, then
-`./gradlew assembleRelease`. The APK is uploaded as the
-`links-app-release-apk` artifact. No signing keystore is configured, so Expo's
-default debug signing is used — add a release keystore before distributing.
+`./gradlew assembleRelease`. Expo SDK 58 generates Gradle 9.4.1, which supports
+JDK 21. The APK is uploaded as the `links-app-release-apk` artifact. No signing
+keystore is configured, so Expo's default debug signing is used — add a release
+keystore before distributing.
 
-Note: the repo ships `bun.lockb`, but the Android workflow uses `npm ci` against
-the committed `package-lock.json`. Keep both in sync, or switch the workflow to
-`bun install --frozen-lockfile`.
+The app uses npm (`package-lock.json`); there is no Bun lockfile in `app/`.
