@@ -1,12 +1,13 @@
 import Button from "@/components/button";
 import Input from "@/components/input";
-import { COLORS, QUERY_KEYS, STORAGE_KEYS } from "@/constants";
+import { COLORS, QUERY_KEYS } from "@/constants";
+import { API_URL } from "@/lib/auth-client";
+import { getSessionToken } from "@/lib/session";
 import { showInfo } from "@/utils";
 import { Link } from "@/utils/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import { X } from "lucide-react-native";
 import { Controller, useForm } from "react-hook-form";
 import { Text, View } from "react-native";
@@ -18,29 +19,35 @@ export default function EditLink() {
 
   const isPresented = router.canGoBack();
 
-  const token = SecureStore.getItem(STORAGE_KEYS.TOKEN);
-  const domain = SecureStore.getItem(STORAGE_KEYS.DOMAIN);
+  const token = getSessionToken();
 
   const { data: links } = useQuery({
     queryKey: [QUERY_KEYS.LINKS],
     queryFn: async () => {
-      if (!token || !domain) {
+      if (!token) {
         return [] as Link[];
       }
 
       try {
-        const res = await fetch(`https://${domain}/admin/link/all`, {
+        const res = await fetch(`${API_URL}/admin/link/all`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }).then((res) => res.json());
+        });
 
-        return res.data as Link[];
+        if (!res.ok) {
+          throw new Error(`Request failed with ${res.status}`);
+        }
+
+        const body = await res.json();
+
+        return body.data as Link[];
       } catch (error) {
         console.error(error);
         return [] as Link[];
       }
     },
+    enabled: !!token,
   });
 
   const queryClient = useQueryClient();
@@ -48,7 +55,7 @@ export default function EditLink() {
   const { mutate: updateLink, isPending } = useMutation({
     mutationKey: [QUERY_KEYS.UPDATE, code],
     mutationFn: async (url: string) => {
-      const res = await fetch(`https://${domain}/admin/link/${code}`, {
+      const res = await fetch(`${API_URL}/admin/link/${code}`, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -56,10 +63,22 @@ export default function EditLink() {
         },
         body: JSON.stringify({ url }),
       });
+
+      if (!res.ok) {
+        throw new Error(
+          res.status === 401
+            ? "Session expired — sign in again"
+            : "Could not update link",
+        );
+      }
     },
     onSuccess: () => {
       showInfo("Link updated");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LINKS] });
+    },
+    onError: (error) => {
+      console.error(error);
+      showInfo(error.message);
     },
   });
 
@@ -72,7 +91,6 @@ export default function EditLink() {
   const {
     control,
     handleSubmit,
-    reset,
     formState: { isValid, isDirty },
   } = useForm({
     defaultValues: {

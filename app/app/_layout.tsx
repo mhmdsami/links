@@ -3,6 +3,7 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { clearLegacyAuthStorage } from "@/lib/session";
 
 export default function RootLayout() {
   SplashScreen.preventAutoHideAsync();
@@ -12,6 +13,10 @@ export default function RootLayout() {
     "MonaSans-Medium": require("../assets/fonts/MonaSans-Medium.otf"),
     "MonaSans-SemiBold": require("../assets/fonts/MonaSans-SemiBold.otf"),
   });
+
+  useEffect(() => {
+    clearLegacyAuthStorage().catch(console.error);
+  }, []);
 
   useEffect(() => {
     if (loaded || error) {

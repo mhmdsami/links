@@ -1,9 +1,10 @@
 import { Link } from "@/utils/types";
 import LinkCard from "@/components/link-card";
-import { COLORS, QUERY_KEYS, STORAGE_KEYS } from "@/constants";
+import { COLORS, QUERY_KEYS } from "@/constants";
+import { API_URL } from "@/lib/auth-client";
+import { getSessionToken } from "@/lib/session";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import { Bolt } from "lucide-react-native";
 import {
   ActivityIndicator,
@@ -16,8 +17,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Links() {
-  const token = SecureStore.getItem(STORAGE_KEYS.TOKEN);
-  const domain = SecureStore.getItem(STORAGE_KEYS.DOMAIN);
+  const token = getSessionToken();
 
   const {
     data: links,
@@ -26,24 +26,30 @@ export default function Links() {
   } = useQuery({
     queryKey: [QUERY_KEYS.LINKS],
     queryFn: async () => {
-      if (!token || !domain) {
+      if (!token) {
         return [] as Link[];
       }
 
       try {
-        const res = await fetch(`https://${domain}/admin/link/all`, {
+        const res = await fetch(`${API_URL}/admin/link/all`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }).then((res) => res.json());
+        });
 
-        return res.data as Link[];
+        if (!res.ok) {
+          throw new Error(`Request failed with ${res.status}`);
+        }
+
+        const body = await res.json();
+
+        return body.data as Link[];
       } catch (error) {
         console.error(error);
         return [] as Link[];
       }
     },
-    enabled: !!token && !!domain,
+    enabled: !!token,
     refetchInterval: 1000 * 60 * 5,
   });
 

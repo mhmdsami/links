@@ -28,6 +28,14 @@ npm install
 npm start
 ```
 
+### Auth
+
+The app signs in with Google through better-auth (`app/lib/auth-client.ts`).
+The Expo client plugin opens the flow in `expo-web-browser` and returns via the
+`linx://` scheme; the session token is kept in SecureStore and sent to the API
+as `Authorization: Bearer <token>`. Point the app at another API with
+`EXPO_PUBLIC_API_URL` (defaults to `https://api.links.sam1.space`).
+
 ### Checks
 
 ```sh

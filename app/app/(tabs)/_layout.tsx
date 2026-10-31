@@ -1,6 +1,6 @@
-import { COLORS, STORAGE_KEYS } from "@/constants";
+import { COLORS } from "@/constants";
+import { isSignedIn } from "@/lib/session";
 import { Redirect, Tabs } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import { Link2, PlusCircle } from "lucide-react-native";
 import { Text, View } from "react-native";
 
@@ -18,7 +18,7 @@ export default function AppLayout() {
     },
   ];
 
-  if (!SecureStore.getItem(STORAGE_KEYS.TOKEN)) {
+  if (!isSignedIn()) {
     return <Redirect href="/config" />;
   }
 

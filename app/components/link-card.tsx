@@ -1,9 +1,10 @@
 import { showInfo } from "@/utils";
-import { COLORS, QUERY_KEYS, STORAGE_KEYS } from "@/constants";
+import { COLORS, QUERY_KEYS } from "@/constants";
+import { API_URL } from "@/lib/auth-client";
+import { getSessionToken } from "@/lib/session";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import { Copy, Pencil, Trash } from "lucide-react-native";
 import { Platform, Text, View } from "react-native";
 
@@ -14,27 +15,34 @@ interface LinkCardProps {
 }
 
 export default function LinkCard({ url, code, clicks }: LinkCardProps) {
-  const domain = SecureStore.getItem(STORAGE_KEYS.DOMAIN) || "";
-  const token = SecureStore.getItem(STORAGE_KEYS.TOKEN) || "";
+  const token = getSessionToken();
 
   const queryClient = useQueryClient();
-  const { mutate: deleteLink, isPending } = useMutation({
+  const { mutate: deleteLink } = useMutation({
     mutationKey: [QUERY_KEYS.DELETE],
     mutationFn: async (code: string) => {
-      try {
-        const res = await fetch(`https://${domain}/admin/link/${code}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }).then((res) => res.json());
-      } catch (error) {
-        console.error(error);
+      const res = await fetch(`${API_URL}/admin/link/${code}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(
+          res.status === 401
+            ? "Session expired — sign in again"
+            : "Could not delete link",
+        );
       }
     },
     onSuccess: () => {
       showInfo("Link deleted");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LINKS] });
+    },
+    onError: (error) => {
+      console.error(error);
+      showInfo(error.message);
     },
   });
 
@@ -158,9 +166,9 @@ export default function LinkCard({ url, code, clicks }: LinkCardProps) {
             size={20}
             onPress={() => {
               if (Platform.OS === "ios") {
-                Clipboard.setUrlAsync(`https://${domain}/${code}`);
+                Clipboard.setUrlAsync(`${API_URL}/${code}`);
               } else {
-                Clipboard.setStringAsync(`https://${domain}/${code}`);
+                Clipboard.setStringAsync(`${API_URL}/${code}`);
               }
             }}
           />
