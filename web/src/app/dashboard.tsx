@@ -3,6 +3,8 @@
 import {
   AlertCircle,
   Check,
+  ChevronLeft,
+  ChevronRight,
   Copy,
   ExternalLink,
   Link2,
@@ -28,9 +30,13 @@ import { cn } from "@/lib/utils";
 
 type FieldErrors = { url?: string; code?: string };
 
+const PAGE_SIZE = 25;
+
 export function Dashboard({ user }: { user: SessionUser }) {
   const router = useRouter();
   const [links, setLinks] = useState<Link[]>([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -61,22 +67,27 @@ export function Dashboard({ user }: { user: SessionUser }) {
     [router]
   );
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setLoadError(null);
-    try {
-      setLinks(await linksApi.list());
-    } catch (error) {
-      if (handleUnauthorized(error)) return;
-      setLoadError(error instanceof Error ? error.message : "Could not load links.");
-    } finally {
-      setLoading(false);
-    }
-  }, [handleUnauthorized]);
+  const load = useCallback(
+    async (nextPage: number) => {
+      setLoading(true);
+      setLoadError(null);
+      try {
+        const result = await linksApi.list({ limit: PAGE_SIZE, offset: (nextPage - 1) * PAGE_SIZE });
+        setLinks(result.data);
+        setTotal(result.pagination.total);
+      } catch (error) {
+        if (handleUnauthorized(error)) return;
+        setLoadError(error instanceof Error ? error.message : "Could not load links.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [handleUnauthorized]
+  );
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    void load(page);
+  }, [load, page]);
 
   async function onCreate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -98,9 +109,13 @@ export function Dashboard({ user }: { user: SessionUser }) {
     try {
       const created = await linksApi.create(parsed.data);
       if (created) {
-        setLinks((current) => [created, ...current.filter((link) => link.code !== created.code)]);
+        if (page === 1) {
+          await load(1);
+        } else {
+          setPage(1);
+        }
       } else {
-        await load();
+        await load(page);
       }
       setUrl("");
       setCode("");
@@ -161,7 +176,11 @@ export function Dashboard({ user }: { user: SessionUser }) {
     setBusyCode(linkCode);
     try {
       await linksApi.remove(linkCode);
-      setLinks((current) => current.filter((link) => link.code !== linkCode));
+      if (links.length === 1 && page > 1) {
+        setPage(page - 1);
+      } else {
+        await load(page);
+      }
       setConfirmingCode(null);
     } catch (error) {
       if (handleUnauthorized(error)) return;
@@ -171,6 +190,10 @@ export function Dashboard({ user }: { user: SessionUser }) {
       setBusyCode(null);
     }
   }
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const firstRow = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const lastRow = Math.min(page * PAGE_SIZE, total);
 
   return (
     <div className="min-h-dvh">
@@ -279,7 +302,7 @@ export function Dashboard({ user }: { user: SessionUser }) {
               <p className="text-sm font-medium">Could not load links</p>
               <p className="mt-1 max-w-md text-[13px] text-muted-foreground">{loadError}</p>
             </div>
-            <Button variant="outline" size="sm" onClick={() => void load()}>
+            <Button variant="outline" size="sm" onClick={() => void load(page)}>
               Retry
             </Button>
           </div>
@@ -290,7 +313,8 @@ export function Dashboard({ user }: { user: SessionUser }) {
             <p className="mt-1 text-sm text-muted-foreground">Create one above.</p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-md border border-border bg-card">
+          <div className="space-y-3">
+            <div className="overflow-hidden rounded-md border border-border bg-card">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[720px] border-collapse text-left">
                 <thead>
@@ -446,6 +470,35 @@ export function Dashboard({ user }: { user: SessionUser }) {
                   })}
                 </tbody>
               </table>
+            </div>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-[12px] text-muted-foreground">
+                Showing {firstRow}–{lastRow} of {total}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  disabled={page <= 1 || loading}
+                >
+                  <ChevronLeft aria-hidden />
+                  Previous
+                </Button>
+                <span className="text-[12px] tabular-nums text-muted-foreground">
+                  Page {page} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                  disabled={page >= totalPages || loading}
+                >
+                  Next
+                  <ChevronRight aria-hidden />
+                </Button>
+              </div>
             </div>
           </div>
         )}

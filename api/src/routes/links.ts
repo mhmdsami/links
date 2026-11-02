@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { count, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { validator } from "hono/validator";
 import type { Env } from "../env";
@@ -27,12 +27,30 @@ app.use(async (c, next) => {
   await next();
 });
 
-app.get("/all", async (c) => {
-  const data = await c.get("db").select().from(link);
+app.get("/", async (c) => {
+  const limit = Math.min(Math.max(Number(c.req.query("limit")) || 25, 1), 100);
+  const offset = Math.max(Number(c.req.query("offset")) || 0, 0);
+  const db = c.get("db");
+  const [data, totals] = await Promise.all([
+    db
+      .select()
+      .from(link)
+      .orderBy(desc(link.createdAt), desc(link.id))
+      .limit(limit)
+      .offset(offset),
+    db.select({ total: count() }).from(link),
+  ]);
+  const total = totals[0]?.total ?? 0;
   return c.json({
     success: true,
-    message: "Fetched all links successfully",
+    message: "Fetched links successfully",
     data,
+    pagination: {
+      total,
+      limit,
+      offset,
+      hasMore: offset + data.length < total,
+    },
   });
 });
 

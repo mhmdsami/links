@@ -1,4 +1,4 @@
-import type { ApiEnvelope, Link } from "./types";
+import type { ApiEnvelope, Link, Pagination } from "./types";
 
 /**
  * Base URL of the links API. Empty means same origin, which is the production
@@ -62,9 +62,21 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<A
 }
 
 export const linksApi = {
-  async list(): Promise<Link[]> {
-    const result = await request<Link[]>("/api/admin/link/all");
-    return result.data ?? [];
+  async list(input: { limit?: number; offset?: number } = {}): Promise<{ data: Link[]; pagination: Pagination }> {
+    const params = new URLSearchParams();
+    if (input.limit !== undefined) params.set("limit", String(input.limit));
+    if (input.offset !== undefined) params.set("offset", String(input.offset));
+    const query = params.toString();
+    const result = await request<Link[]>(`/api/admin/link${query ? `?${query}` : ""}`);
+    return {
+      data: result.data ?? [],
+      pagination: result.pagination ?? {
+        total: result.data?.length ?? 0,
+        limit: input.limit ?? 25,
+        offset: input.offset ?? 0,
+        hasMore: false,
+      },
+    };
   },
 
   async create(input: { url: string; code: string }): Promise<Link | undefined> {
