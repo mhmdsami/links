@@ -2,6 +2,7 @@
   "name": "links-web",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "bun@1.4.4",
   "engines": {
     "node": ">=24 <25"
   },
