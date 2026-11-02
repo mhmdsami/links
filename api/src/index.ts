@@ -1,42 +1,46 @@
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { cors } from "hono/cors";
-import { auth } from "./lib/auth";
+import type { Env } from "./env";
+import { createAuth, type Auth } from "./lib/auth";
 import links from "./routes/links";
 import { link } from "./schema";
-import db from "./utils/db";
-import { eq } from "drizzle-orm";
+import { getDb, type Db } from "./utils/db";
 
-const app = new Hono();
+type AppEnv = {
+  Bindings: Env;
+  Variables: { db: Db; auth: Auth };
+};
 
-const allowedOrigins = (Bun.env.TRUSTED_ORIGINS ?? "")
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
+const app = new Hono<AppEnv>();
 
-app.use(
-  "*",
-  cors({
-    origin: (origin) => (allowedOrigins.includes(origin) ? origin : (allowedOrigins[0] ?? "")),
-    credentials: true,
-    allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
-  }),
-);
+app.use("*", async (c, next) => {
+  const db = getDb(c.env);
+  c.set("db", db);
 
-app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+  if (
+    c.req.path.startsWith("/api/auth") ||
+    c.req.path.startsWith("/api/admin")
+  ) {
+    c.set("auth", createAuth(c.env, db));
+  }
 
-app.get("/", (c) => {
+  await next();
+});
+
+app.on(["POST", "GET"], "/api/auth/*", (c) => c.get("auth").handler(c.req.raw));
+
+app.get("/api/health", (c) => {
   return c.json({
     success: true,
     message: "links API is healthy",
-    uptime: process.uptime(),
   });
 });
 
-app.route("/admin/link", links);
+app.route("/api/admin/link", links);
 
-app.get("/:code", async (c) => {
+app.get("/api/redirect/:code", async (c) => {
   const code = c.req.param("code");
+  const db = c.get("db");
   const [data] = await db.select().from(link).where(eq(link.code, code));
 
   if (!data) {
@@ -53,14 +57,11 @@ app.get("/:code", async (c) => {
     })
     .where(eq(link.code, code));
 
-  return c.redirect(data.url);
+  return c.json({ success: true, data: { url: data.url } });
 });
 
 app.notFound((c) => {
-  return c.json(
-    { success: false, message: "Route not found!" },
-    { status: 404 },
-  );
+  return c.json({ success: false, message: "Route not found!" }, { status: 404 });
 });
 
 export default app;

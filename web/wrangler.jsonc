@@ -4,7 +4,8 @@
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-08-01",
   "compatibility_flags": ["nodejs_compat"],
-  "routes": [{ "pattern": "links.sam1.space", "custom_domain": true }],
+  "routes": [{ "pattern": "links.sam1.space/*", "zone_name": "sam1.space" }],
+  "services": [{ "binding": "API", "service": "links-api" }],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"

@@ -1,19 +1,25 @@
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { validator } from "hono/validator";
-import { auth } from "../lib/auth";
+import type { Env } from "../env";
+import type { Auth } from "../lib/auth";
 import { isLocalPreview } from "../lib/local-preview";
 import { insertLinkSchema, link, updateLinkSchema } from "../schema";
-import db from "../utils/db";
-import { eq } from "drizzle-orm";
+import type { Db } from "../utils/db";
 
-const app = new Hono();
+const app = new Hono<{
+  Bindings: Env;
+  Variables: { db: Db; auth: Auth };
+}>();
 
 app.use(async (c, next) => {
-  if (isLocalPreview()) {
+  if (isLocalPreview(c.env)) {
     return next();
   }
 
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  const session = await c.get("auth").api.getSession({
+    headers: c.req.raw.headers,
+  });
   if (!session?.user) {
     return c.json({ success: false, message: "Unauthorized" }, { status: 401 });
   }
@@ -22,7 +28,7 @@ app.use(async (c, next) => {
 });
 
 app.get("/all", async (c) => {
-  const data = await db.select().from(link);
+  const data = await c.get("db").select().from(link);
   return c.json({
     success: true,
     message: "Fetched all links successfully",
@@ -32,7 +38,11 @@ app.get("/all", async (c) => {
 
 app.get("/:code", async (c) => {
   const code = c.req.param("code");
-  const [data] = await db.select().from(link).where(eq(link.code, code));
+  const [data] = await c
+    .get("db")
+    .select()
+    .from(link)
+    .where(eq(link.code, code));
 
   if (!data) {
     return c.json(
@@ -55,6 +65,7 @@ app.post(
   }),
   async (c) => {
     const { code, url } = c.req.valid("json");
+    const db = c.get("db");
 
     const [existing] = await db.select().from(link).where(eq(link.code, code));
     if (existing) {
@@ -83,6 +94,7 @@ app.patch(
   }),
   async (c) => {
     const code = c.req.param("code");
+    const db = c.get("db");
     const [data] = await db.select().from(link).where(eq(link.code, code));
 
     if (!data) {
@@ -103,6 +115,7 @@ app.patch(
 
 app.delete("/:code", async (c) => {
   const code = c.req.param("code");
+  const db = c.get("db");
   const [data] = await db.select().from(link).where(eq(link.code, code));
 
   if (!data) {

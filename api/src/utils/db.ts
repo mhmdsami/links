@@ -1,7 +1,8 @@
-import { drizzle } from "drizzle-orm/bun-sqlite";
-import { Database } from "bun:sqlite";
+import { drizzle } from "drizzle-orm/d1";
+import type { Env } from "../env";
 
-const sqlite = new Database(Bun.env.DATABASE_URL);
-const db = drizzle(sqlite);
+export function getDb(env: Env) {
+  return drizzle(env.DB);
+}
 
-export default db;
+export type Db = ReturnType<typeof getDb>;

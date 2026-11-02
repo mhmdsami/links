@@ -1,17 +1,19 @@
 import type { ApiEnvelope, Link } from "./types";
 
 /**
- * Base URL of the links API (Hono on Bun). The short-link redirect lives there
- * too: GET `${API_URL}/:code`.
+ * Base URL of the links API. Empty means same origin, which is the production
+ * setup: links.sam1.space/api/* routes to the API Worker.
  */
-export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/+$/, "");
 
 export function apiUrl(path: string): string {
-  return `${API_URL}${path.startsWith("/") ? path : `/${path}`}`;
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  return `${API_URL}${normalized}`;
 }
 
 export function shortUrl(code: string): string {
-  return `${API_URL}/${code}`;
+  const origin = typeof window === "undefined" ? API_URL : window.location.origin;
+  return `${origin}/${code}`;
 }
 
 export class ApiError extends Error {
@@ -33,7 +35,6 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<A
   try {
     response = await fetch(apiUrl(path), {
       ...rest,
-      credentials: "include",
       headers: {
         Accept: "application/json",
         ...(body === undefined ? {} : { "Content-Type": "application/json" }),
@@ -62,20 +63,20 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<A
 
 export const linksApi = {
   async list(): Promise<Link[]> {
-    const result = await request<Link[]>("/admin/link/all");
+    const result = await request<Link[]>("/api/admin/link/all");
     return result.data ?? [];
   },
 
   async create(input: { url: string; code: string }): Promise<Link | undefined> {
-    const result = await request<Link[]>("/admin/link/create", { method: "POST", body: input });
+    const result = await request<Link[]>("/api/admin/link/create", { method: "POST", body: input });
     return Array.isArray(result.data) ? result.data[0] : (result.data as Link | undefined);
   },
 
   async update(code: string, url: string): Promise<void> {
-    await request<unknown>(`/admin/link/${encodeURIComponent(code)}`, { method: "PATCH", body: { url } });
+    await request<unknown>(`/api/admin/link/${encodeURIComponent(code)}`, { method: "PATCH", body: { url } });
   },
 
   async remove(code: string): Promise<void> {
-    await request<unknown>(`/admin/link/${encodeURIComponent(code)}`, { method: "DELETE" });
+    await request<unknown>(`/api/admin/link/${encodeURIComponent(code)}`, { method: "DELETE" });
   },
 };

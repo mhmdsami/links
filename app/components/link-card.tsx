@@ -21,7 +21,7 @@ export default function LinkCard({ url, code, clicks }: LinkCardProps) {
   const { mutate: deleteLink } = useMutation({
     mutationKey: [QUERY_KEYS.DELETE],
     mutationFn: async (code: string) => {
-      const res = await fetch(`${API_URL}/admin/link/${code}`, {
+      const res = await fetch(`${API_URL}/api/admin/link/${code}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

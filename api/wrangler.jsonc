@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "links-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "links-db",
+      "database_id": "9dac4b05-3698-4680-811c-861b6ad872af",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  "routes": [{ "pattern": "links.sam1.space/api/*", "zone_name": "sam1.space" }],
+  "vars": {
+    "BETTER_AUTH_URL": "https://links.sam1.space/api/auth",
+    "TRUSTED_ORIGINS": "https://links.sam1.space"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

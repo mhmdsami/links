@@ -30,10 +30,11 @@ bun start
 The app signs in with Google through better-auth in `app/lib/auth-client.ts`.
 The Expo client plugin opens the flow in `expo-web-browser` and returns through
 the `links://` scheme. The session token is kept in SecureStore and sent to the
-API as `Authorization: Bearer <token>`. Point the app at another API with
-`EXPO_PUBLIC_API_URL`; otherwise it uses the production API origin configured in
-`app/lib/auth-client.ts`. For local development without Google, point it at a
-local HTTP API and set `EXPO_PUBLIC_LOCAL_PREVIEW=1`.
+API as `Authorization: Bearer <token>`. Point the app at another origin with
+`EXPO_PUBLIC_API_URL`; otherwise it uses the web origin configured in
+`app/lib/auth-client.ts`. API routes live under `/api/*` on that origin. For
+local development without Google, point it at a local HTTP API and set
+`EXPO_PUBLIC_LOCAL_PREVIEW=1`.
 
 ## Checks
 

@@ -41,7 +41,7 @@ export default function Index() {
         throw new Error("Session missing — sign in again");
       }
 
-      const res = await fetch(`${API_URL}/admin/link/create`, {
+      const res = await fetch(`${API_URL}/api/admin/link/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

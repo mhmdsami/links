@@ -29,7 +29,7 @@ export default function EditLink() {
       }
 
       try {
-        const res = await fetch(`${API_URL}/admin/link/all`, {
+        const res = await fetch(`${API_URL}/api/admin/link/all`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -55,7 +55,7 @@ export default function EditLink() {
   const { mutate: updateLink, isPending } = useMutation({
     mutationKey: [QUERY_KEYS.UPDATE, code],
     mutationFn: async (url: string) => {
-      const res = await fetch(`${API_URL}/admin/link/${code}`, {
+      const res = await fetch(`${API_URL}/api/admin/link/${code}`, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,

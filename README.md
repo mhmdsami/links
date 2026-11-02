@@ -1,42 +1,38 @@
 # links
 
-A short-link service with one API, one web dashboard, and one Expo app in a
-single repository.
+A short-link service with one API Worker, one web dashboard, and one Expo app
+in a single repository.
 
 ```
 links/
-├── api/   Hono + Bun + Drizzle + SQLite + better-auth (Google)
-├── web/   Next.js 16 dashboard, deployed on Cloudflare Workers via OpenNext
+├── api/   Hono on Cloudflare Workers + D1 + better-auth (Google)
+├── web/   Next.js 16 dashboard on Cloudflare Workers via OpenNext
 └── app/   Expo / React Native client
 ```
 
-Short-link redirects (`GET /:code`) are served by `api`, not by the dashboard.
+The web app and API share one hostname. Requests under `/api/*` go to the API
+Worker; everything else goes to the web Worker. Short-link redirects are handled
+by the web Worker, which asks the API to record the click.
 
 ## Packages
 
 | Package | Runtime | What it does | Local dev |
 | --- | --- | --- | --- |
-| `api` | Bun 1.4 | Link CRUD, redirects, better-auth Google sessions | `bun run dev` |
-| `web` | Node 24 LTS / Workers | Sign-in, link management dashboard | `bun run dev` |
+| `api` | Cloudflare Workers + D1 | Link CRUD, redirect data, better-auth sessions | `bun run dev` |
+| `web` | Node 24 / Workers | Sign-in, link management dashboard, short-link redirects | `bun run dev` |
 | `app` | Expo SDK 58 | Mobile link management | `bun start` |
 
 ## Runtime versions (October 2026)
 
 | Tool | Version | Notes |
 | --- | --- | --- |
-| Node.js | 24.x active LTS | `engines.node: ">=24 <25"`, `.nvmrc` = `24`; CI uses `node-version: 24` |
-| Bun | 1.4.x (1.4.4) | Latest stable. Bun has no LTS channel, so the major is pinned in `engines.bun` and CI. |
-| Java | Temurin 21 LTS | Android CI only |
-| TypeScript | 7.0.2 (api, web); 6.0.3 (app) | No LTS concept. The Expo SDK 58 template pins `~6.0.3`. |
-| Expo SDK | 58 (RN 0.88.1, React 19.3.0) | SDK 58 supports Node 24 and JDK 21. |
+| Node.js | 24.x active LTS | `engines.node: ">=24 <25"`, `.nvmrc` = `24` |
+| Bun | 1.4.4 | Package manager and test runner; the API no longer runs on Bun |
+| Wrangler | 4.156.0 | API Worker, D1 migrations, deploys |
+| TypeScript | 7.0.2 (api, web); 6.0.3 (app) | Expo SDK 58 pins `~6.0.3` |
+| Hono / Drizzle / better-auth | 4.13.14 / 0.45.4 / 1.7.14 | api |
+| Expo SDK | 58 | React Native 0.88.1, React 19.3.0 |
 | Next.js / React | 16.4.3 / 19.3.1 | web |
-| Hono / Drizzle / better-auth | 4.13.14 / 0.45.4 (kit 0.31.11) / 1.7.14 | api, Zod 3.25.76 |
-
-TypeScript and Bun do not have LTS channels, so both track the latest stable
-release. TypeScript 7 is used wherever it works; Expo 58 pins TypeScript 6.
-
-Every package uses Bun for dependency management. Node 24 is still the runtime
-for Next.js and Expo tooling.
 
 ## Setup
 
@@ -48,97 +44,81 @@ bun run hooks:install       # installs commit-msg + pre-push hooks
 Install dependencies in the package you are working on:
 
 ```bash
-cd api && bun install && cp .env.example .env && bun run migrate && bun run dev
-cd web && bun install && cp .env.example .env.local && bun run dev
+cd api && bun install && cp .dev.vars.example .dev.vars && bun run db:migrate:local && bun run dev
+cd web && bun install && bun run dev
 cd app && bun install && bun start
 ```
 
-The web dev server and the API both default to port 3000. Move one of them if
-they collide. The web app finds the API through `NEXT_PUBLIC_API_URL`.
+The API Worker listens on port 3000 and the web app on 3001. In development,
+Next rewrites `/api/*` to the API Worker so both share an origin.
 
 ## Gates
-
-Each package has `types`, `test` where applicable, and `gate`:
 
 ```bash
 cd api && bun run gate        # tsc + bun test
 cd web && bun run gate        # tsc + node:test + next build
 cd app && bun run gate        # tsc + eslint
+bun run gate                  # all three from the root
 ```
 
-Run all three from the root:
+## Architecture
 
-```bash
-bun run gate
-# on a machine without a global bun:
-BUN_BIN="npx --yes bun@1.4.4" bun run gate
-```
+- **No server process.** The API runs as a Cloudflare Worker with a D1 database.
+  There is no VM, systemd unit, tunnel, reverse proxy, or certificate job.
+- **One hostname.** `links.sam1.space/api/*` routes to the API Worker and
+  `links.sam1.space/*` routes to the web Worker. Same-origin requests mean
+  better-auth cookies work without CORS or credential flags.
+- **Short links** stay on the web hostname. A catch-all route asks the API for
+  the destination and records the click, then returns a 302.
+- **Data** lives in D1. Migrations are generated with drizzle-kit and applied
+  with `wrangler d1 migrations apply`.
 
-`lefthook.yml` runs commitlint on `commit-msg` and the full gate on `pre-push`.
+The separate `links-api` hostname was retired because it added a second origin,
+CORS, cookie, DNS, TLS, and server-maintenance work without any benefit.
 
 ## Environment
 
-### api (`api/.env`)
+### api
 
-| Variable | Required | Example / notes |
+Production values live in `api/wrangler.jsonc` (`vars`) and Worker secrets:
+
+| Variable | Where | Notes |
 | --- | --- | --- |
-| `DATABASE_URL` | yes | `./links.db` (SQLite file) |
-| `BETTER_AUTH_URL` | yes | Public API origin |
-| `BETTER_AUTH_SECRET` | yes | Long random string |
-| `GOOGLE_CLIENT_ID` | yes | Google OAuth web client |
-| `GOOGLE_CLIENT_SECRET` | yes | Google OAuth web client |
-| `TRUSTED_ORIGINS` | yes | Comma-separated web origin and `links://` (CORS + better-auth) |
-| `LOCAL_PREVIEW` | no | `1` bypasses auth on admin routes for local development |
+| `BETTER_AUTH_URL` | `wrangler.jsonc` | Web origin plus `/api/auth` |
+| `TRUSTED_ORIGINS` | `wrangler.jsonc` | Web origin and `links://` |
+| `BETTER_AUTH_SECRET` | secret | `wrangler secret put BETTER_AUTH_SECRET` |
+| `GOOGLE_CLIENT_ID` | secret | Google OAuth web client |
+| `GOOGLE_CLIENT_SECRET` | secret | Google OAuth web client |
 
-Register the `/api/auth/callback/google` path on the production API origin as a
-Google redirect URI, and add the local API origin for development.
+Local development uses `api/.dev.vars`, copied from `.dev.vars.example`, with
+`LOCAL_PREVIEW=1`.
 
-### web (`web/.env.local`)
+Google redirect URI: the `/api/auth/callback/google` path on the web origin.
 
-| Variable | Required | Example / notes |
-| --- | --- | --- |
-| `NEXT_PUBLIC_API_URL` | yes | API origin; inlined at build time |
-| `NEXT_PUBLIC_LOCAL_PREVIEW` | no | `1` treats the browser as a local dev user |
+### web
 
-The API must list the web origin in `TRUSTED_ORIGINS`. Keep the web and API
-hostnames on the same registrable domain so the better-auth session cookie is
-same-site.
+No API URL is needed in production because the API is same-origin. For local
+development without Google, set `NEXT_PUBLIC_LOCAL_PREVIEW=1` in
+`web/.env.development.local`.
 
-### app (`app/.env` optional)
+### app
 
-| Variable | Required | Example / notes |
-| --- | --- | --- |
-| `EXPO_PUBLIC_API_URL` | no | API origin; defaults to the production API origin in `app/lib/auth-client.ts` |
-| `EXPO_PUBLIC_LOCAL_PREVIEW` | no | `1` treats the app as a local dev user when the API origin is HTTP |
-
-The app signs in with Google through better-auth. The Expo plugin opens the
-flow in `expo-web-browser` and returns to the `links://` deep link, so that
-scheme must be listed in the API's `TRUSTED_ORIGINS`. The app sends the session
-token as `Authorization: Bearer <token>` to `/admin/link/*`.
-
-### Local preview
-
-Local development does not need Google. Set `LOCAL_PREVIEW=1` in `api/.env`,
-`NEXT_PUBLIC_LOCAL_PREVIEW=1` in `web/.env.local`, and optionally
-`EXPO_PUBLIC_LOCAL_PREVIEW=1` in `app/.env`. The bypass activates only when the
-API origin is local (HTTP), so an HTTPS deployment never uses it.
+`EXPO_PUBLIC_API_URL` defaults to the web origin. For local development against
+a local Worker, point it at the local HTTP origin and set
+`EXPO_PUBLIC_LOCAL_PREVIEW=1`.
 
 ## CI / deploy
 
-- `.github/workflows/api-ci.yml` runs on `api/**`: bun install, migrate,
-  typecheck, tests.
-- `.github/workflows/web-deploy.yml` runs on `web/**`: bun install,
-  typecheck, test, OpenNext build, Cloudflare deploy. It needs `CLOUDFLARE_API_TOKEN` (secret)
-  and `CLOUDFLARE_ACCOUNT_ID`, `NEXT_PUBLIC_API_URL` (variables).
-- `.github/workflows/app-android.yml` runs on `app/**`: Node 24, Temurin 21,
-  Expo SDK 58 prebuild, Gradle release APK artifact.
-
-`web/wrangler.jsonc` binds the production web hostname. Change the route there
-if the hostname changes.
+- `.github/workflows/api-deploy.yml` runs on `api/**`: typecheck, tests, D1
+  migrations, then `wrangler deploy`. Needs `CLOUDFLARE_API_TOKEN` and
+  `CLOUDFLARE_ACCOUNT_ID`.
+- `.github/workflows/api-ci.yml` runs the api checks on pull requests.
+- `.github/workflows/web-deploy.yml` runs on `web/**`: typecheck, tests,
+  OpenNext build, Cloudflare deploy.
+- `.github/workflows/app-android.yml` runs on `app/**`: Expo prebuild and a
+  release APK artifact.
 
 ## Follow-ups
 
-- The server checkout moves from the old repository root to `links/api`
-  (systemd `WorkingDirectory` and `ExecStart`), and the canonical
-  `api/src/lib/auth.ts` needs the `expo()` and `bearer()` plugins. The exact
-  steps are in the private handoff notes.
+- The ops session removes the old server runtime once the Worker is live.
+- Redirect the old API hostname, if it still resolves, to the web origin.

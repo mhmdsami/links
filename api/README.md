@@ -1,70 +1,87 @@
 # links API
 
-API for managing a link collection. Built with Hono, Bun, Drizzle, and SQLite.
-Public redirects are served here at `GET /:code`. The web and Expo clients
-authenticate with better-auth using Google.
+Hono API running on Cloudflare Workers with D1 and better-auth (Google).
+All routes live under `/api/*` on the web hostname.
 
 ## Requirements
 
-- Bun 1.4.x (currently 1.4.4). Bun has no LTS channel, so the major is pinned in
-  `engines.bun` and CI.
-- Node.js 24.x LTS for tooling (`engines.node: ">=24 <25"`).
-- TypeScript 7.0.2, the current stable release.
-- Hono 4.13, Drizzle ORM 0.45 / Kit 0.31, better-auth 1.7, Zod 3.25.
+- Bun 1.4.4 for package management and tests
+- Node.js 24.x LTS (`engines.node: ">=24 <25"`)
+- Wrangler 4.156.0
+- TypeScript 7.0.2
 
-## Install
+## Local development
 
-```sh
+```bash
 bun install
-```
-
-## Development
-
-Create a `.env` file from the example:
-
-```sh
-cp .env.example .env
-```
-
-Run the migrations, then start the server:
-
-```sh
-bun run migrate
+cp .dev.vars.example .dev.vars
+bun run db:migrate:local
 bun run dev
 ```
 
-The dev server listens on port 3000.
+The Worker listens on port 3000. `wrangler dev` reads bindings from
+`wrangler.jsonc` and local values from `.dev.vars`.
 
-## Auth
+`LOCAL_PREVIEW=1` bypasses auth on admin routes when `BETTER_AUTH_URL` points
+at localhost.
 
-`/api/auth/*` is handled by better-auth with the Google provider. The admin
-routes under `/admin/link/*` require either a session cookie or an
-`Authorization: Bearer <session-token>` header. The native app uses the bearer
-plugin. The canonical `src/lib/auth.ts` and the auth tables live on the server;
-`docs/auth-wiring.patch` contains the route changes needed to wire them up.
+## Routes
 
-Environment:
+| Route | Purpose |
+| --- | --- |
+| `GET /api/health` | Health check |
+| `GET/POST /api/auth/*` | better-auth, including the Expo deep-link proxy |
+| `/api/admin/link/*` | Authenticated link CRUD |
+| `GET /api/redirect/:code` | Returns the destination and records a click |
 
-- `BETTER_AUTH_URL`: public base URL of this API.
-- `BETTER_AUTH_SECRET`: long random string.
-- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`: Google OAuth web client.
-- `TRUSTED_ORIGINS`: comma-separated origins allowed to call the API
-  cross-origin, covering CORS with credentials and better-auth trusted origins.
-  Include the web origin and the app scheme `links://`.
-- `LOCAL_PREVIEW`: set to `1` to bypass auth on local admin routes. It only
-  applies when `BETTER_AUTH_URL` is a local HTTP origin.
+The web Worker owns short-link redirects and calls `/api/redirect/:code`.
 
-Register the `/api/auth/callback/google` path on the production API origin as a
-Google redirect URI, and add the local API origin for development.
+## Database
+
+D1 binding `DB`, database `links-db`.
+
+```bash
+bun run generate            # drizzle-kit generate
+bun run db:migrate:local    # apply to the local Wrangler D1
+bun run db:migrate:remote   # apply to the production D1
+```
+
+To import an old SQLite database once:
+
+```bash
+./scripts/import-sqlite.sh path/to/db.sqlite
+```
+
+## Environment
+
+Production values in `wrangler.jsonc`:
+
+- `BETTER_AUTH_URL`: web origin plus `/api/auth`
+- `TRUSTED_ORIGINS`: web origin and `links://`
+
+Worker secrets:
+
+- `BETTER_AUTH_SECRET`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+
+```bash
+bunx wrangler secret put BETTER_AUTH_SECRET
+bunx wrangler secret put GOOGLE_CLIENT_ID
+bunx wrangler secret put GOOGLE_CLIENT_SECRET
+```
+
+Google redirect URI: `/api/auth/callback/google` on the web origin.
 
 ## Scripts
 
-```sh
-bun run types   # tsc --noEmit
-bun run test    # bun test
-bun run gate    # types && test
+```bash
+bun run dev               # wrangler dev
+bun run deploy            # wrangler deploy
+bun run types             # tsc --noEmit
+bun run test              # bun test
+bun run gate              # types && test
 ```
 
-Hooks live at the repository root in `lefthook.yml`: `commit-msg` runs
-commitlint and `pre-push` runs the full monorepo gate. Install them once with
-`npm run hooks:install` from the root.
+Hooks live at the repository root in `lefthook.yml`. Install them once with
+`bun run hooks:install` from the root.

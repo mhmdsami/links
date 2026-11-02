@@ -1,12 +1,7 @@
 import { createAuthClient } from "better-auth/react";
-import { API_URL } from "./api";
 
 /**
- * better-auth client bound to the API's base URL. Session cookies are sent
- * cross-origin (`credentials: "include"`), so the API must allow this origin
- * via `trustedOrigins` in its better-auth config.
+ * Same-origin better-auth client. The web app and API share
+ * links.sam1.space, so cookies need no cross-origin configuration.
  */
-export const authClient = createAuthClient({
-  baseURL: API_URL,
-  fetchOptions: { credentials: "include" },
-});
+export const authClient = createAuthClient();

@@ -6,7 +6,7 @@ import * as SecureStore from "expo-secure-store";
  * Base URL of the links API. Override with EXPO_PUBLIC_API_URL for local dev.
  */
 export const API_URL = (
-  process.env.EXPO_PUBLIC_API_URL ?? "https://links-api.sam1.space"
+  process.env.EXPO_PUBLIC_API_URL ?? "https://links.sam1.space"
 ).replace(/\/+$/, "");
 
 /**

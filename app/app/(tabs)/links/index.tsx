@@ -31,7 +31,7 @@ export default function Links() {
       }
 
       try {
-        const res = await fetch(`${API_URL}/admin/link/all`, {
+        const res = await fetch(`${API_URL}/api/admin/link/all`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
