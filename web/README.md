@@ -28,15 +28,15 @@ stays same-site and is sent with `credentials: "include"`.
 ## Requirements
 
 - Node.js 24.x LTS (`engines.node: ">=24 <25"`, `.nvmrc` = `24`)
-- npm 11
+- Bun 1.4.4 for dependencies and scripts
 - TypeScript 7.0.2, the current stable release
 
 ## Develop
 
 ```bash
-npm install
+bun install
 cp .env.example .env.local   # point NEXT_PUBLIC_API_URL at the API
-npm run dev                  # port 3001 when the API holds 3000
+bun run dev                  # port 3001 when the API holds 3000
 ```
 
 Calls go to the API with cookies (`credentials: "include"`). The session gate
@@ -48,22 +48,22 @@ browser.
 ## Scripts
 
 ```bash
-npm run types     # tsc --noEmit
-npm run test      # node --test (zod validation unit tests)
-npm run build     # next build
-npm run gate      # types && test && build
-npm run deploy    # opennextjs-cloudflare build && deploy
-npm run preview   # opennextjs-cloudflare build && preview
+bun run types     # tsc --noEmit
+bun run test      # node --test (zod validation unit tests)
+bun run build     # next build
+bun run gate      # types && test && build
+bun run deploy    # opennextjs-cloudflare build && deploy
+bun run preview   # opennextjs-cloudflare build && preview
 ```
 
 Hooks live at the repository root in `lefthook.yml`: `commit-msg` runs
 commitlint and `pre-push` runs the monorepo gate. Install them once with
-`npm run hooks:install` from the root.
+`bun run hooks:install` from the root.
 
 ## Deploy
 
 ```bash
-npm run deploy
+bun run deploy
 ```
 
 Requires a Cloudflare API token (`CLOUDFLARE_API_TOKEN`) and account ID

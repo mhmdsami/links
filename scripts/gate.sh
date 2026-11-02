@@ -15,7 +15,7 @@ echo "==> api"
 (cd "$ROOT/api" && "${BUN[@]}" run gate)
 
 echo "==> web"
-(cd "$ROOT/web" && npm run gate)
+(cd "$ROOT/web" && "${BUN[@]}" run gate)
 
 echo "==> app"
-(cd "$ROOT/app" && npm run gate)
+(cd "$ROOT/app" && "${BUN[@]}" run gate)

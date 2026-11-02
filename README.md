@@ -17,8 +17,8 @@ Short-link redirects (`GET /:code`) are served by `api`, not by the dashboard.
 | Package | Runtime | What it does | Local dev |
 | --- | --- | --- | --- |
 | `api` | Bun 1.4 | Link CRUD, redirects, better-auth Google sessions | `bun run dev` |
-| `web` | Node 24 LTS / Workers | Sign-in, link management dashboard | `npm run dev` |
-| `app` | Expo SDK 58 | Mobile link management | `npm start` |
+| `web` | Node 24 LTS / Workers | Sign-in, link management dashboard | `bun run dev` |
+| `app` | Expo SDK 58 | Mobile link management | `bun start` |
 
 ## Runtime versions (October 2026)
 
@@ -35,19 +35,22 @@ Short-link redirects (`GET /:code`) are served by `api`, not by the dashboard.
 TypeScript and Bun do not have LTS channels, so both track the latest stable
 release. TypeScript 7 is used wherever it works; Expo 58 pins TypeScript 6.
 
+Every package uses Bun for dependency management. Node 24 is still the runtime
+for Next.js and Expo tooling.
+
 ## Setup
 
 ```bash
-npm install                 # root tooling (lefthook, commitlint)
-npm run hooks:install       # installs commit-msg + pre-push hooks
+bun install                 # root tooling (lefthook, commitlint)
+bun run hooks:install       # installs commit-msg + pre-push hooks
 ```
 
 Install dependencies in the package you are working on:
 
 ```bash
 cd api && bun install && cp .env.example .env && bun run migrate && bun run dev
-cd web && npm install && cp .env.example .env.local && npm run dev
-cd app && npm install && npm start
+cd web && bun install && cp .env.example .env.local && bun run dev
+cd app && bun install && bun start
 ```
 
 The web dev server and the API both default to port 3000. Move one of them if
@@ -59,16 +62,16 @@ Each package has `types`, `test` where applicable, and `gate`:
 
 ```bash
 cd api && bun run gate        # tsc + bun test
-cd web && npm run gate        # tsc + node:test + next build
-cd app && npm run gate        # tsc + eslint
+cd web && bun run gate        # tsc + node:test + next build
+cd app && bun run gate        # tsc + eslint
 ```
 
 Run all three from the root:
 
 ```bash
-npm run gate
-# Bun is required for the api gate; override the binary if needed:
-BUN_BIN="npx --yes bun@1.4.4" npm run gate
+bun run gate
+# on a machine without a global bun:
+BUN_BIN="npx --yes bun@1.4.4" bun run gate
 ```
 
 `lefthook.yml` runs commitlint on `commit-msg` and the full gate on `pre-push`.
@@ -114,8 +117,8 @@ token as `Authorization: Bearer <token>` to `/admin/link/*`.
 
 - `.github/workflows/api-ci.yml` runs on `api/**`: bun install, migrate,
   typecheck, tests.
-- `.github/workflows/web-deploy.yml` runs on `web/**`: npm ci, typecheck, test,
-  OpenNext build, Cloudflare deploy. It needs `CLOUDFLARE_API_TOKEN` (secret)
+- `.github/workflows/web-deploy.yml` runs on `web/**`: bun install,
+  typecheck, test, OpenNext build, Cloudflare deploy. It needs `CLOUDFLARE_API_TOKEN` (secret)
   and `CLOUDFLARE_ACCOUNT_ID`, `NEXT_PUBLIC_API_URL` (variables).
 - `.github/workflows/app-android.yml` runs on `app/**`: Node 24, Temurin 21,
   Expo SDK 58 prebuild, Gradle release APK artifact.
