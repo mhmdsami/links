@@ -1,16 +1,16 @@
 # links
 
-A personal short-link service: one API, one web dashboard, one Expo app, in a
+A short-link service with one API, one web dashboard, and one Expo app in a
 single repository.
 
 ```
 links/
 ├── api/   Hono + Bun + Drizzle + SQLite + better-auth (Google)
 ├── web/   Next.js 16 dashboard, deployed on Cloudflare Workers via OpenNext
-└── app/   Expo / React Native client (imported from mhmdsami/linx)
+└── app/   Expo / React Native client
 ```
 
-Short-link redirects (`GET /:code`) are served by **api**, not by the dashboard.
+Short-link redirects (`GET /:code`) are served by `api`, not by the dashboard.
 
 ## Packages
 
@@ -25,15 +25,15 @@ Short-link redirects (`GET /:code`) are served by **api**, not by the dashboard.
 | Tool | Version | Notes |
 | --- | --- | --- |
 | Node.js | 24.x active LTS | `engines.node: ">=24 <25"`, `.nvmrc` = `24`; CI uses `node-version: 24` |
-| Bun | 1.4.x (1.4.4) | latest stable; Bun has no LTS channel, so the major is pinned in `engines.bun` and CI |
+| Bun | 1.4.x (1.4.4) | Latest stable. Bun has no LTS channel, so the major is pinned in `engines.bun` and CI. |
 | Java | Temurin 21 LTS | Android CI only |
-| TypeScript | 7.0.2 (api, web); 6.0.3 (app) | no LTS concept; Expo SDK 58's template pins `~6.0.3` |
-| Expo SDK | 58 (RN 0.88.1, React 19.3.0) | SDK 58 supports Node 24 and JDK 21 |
+| TypeScript | 7.0.2 (api, web); 6.0.3 (app) | No LTS concept. The Expo SDK 58 template pins `~6.0.3`. |
+| Expo SDK | 58 (RN 0.88.1, React 19.3.0) | SDK 58 supports Node 24 and JDK 21. |
 | Next.js / React | 16.4.3 / 19.3.1 | web |
 | Hono / Drizzle / better-auth | 4.13.14 / 0.45.4 (kit 0.31.11) / 1.7.14 | api, Zod 3.25.76 |
 
-TypeScript and Bun do not have LTS channels; "latest stable" is the policy for
-both. TypeScript 7 is used everywhere it works (Expo 58 pins TS 6).
+TypeScript and Bun do not have LTS channels, so both track the latest stable
+release. TypeScript 7 is used wherever it works; Expo 58 pins TypeScript 6.
 
 ## Setup
 
@@ -42,7 +42,7 @@ npm install                 # root tooling (lefthook, commitlint)
 npm run hooks:install       # installs commit-msg + pre-push hooks
 ```
 
-Install each package where you work on it:
+Install dependencies in the package you are working on:
 
 ```bash
 cd api && bun install && cp .env.example .env && bun run migrate && bun run dev
@@ -50,12 +50,12 @@ cd web && npm install && cp .env.example .env.local && npm run dev
 cd app && npm install && npm start
 ```
 
-The web dev server and the API both default to port 3000. Start one of them on
-another port if they collide (the web app's API URL is `NEXT_PUBLIC_API_URL`).
+The web dev server and the API both default to port 3000. Move one of them if
+they collide. The web app finds the API through `NEXT_PUBLIC_API_URL`.
 
 ## Gates
 
-Each package has `types`, `test` (where applicable), and `gate`:
+Each package has `types`, `test` where applicable, and `gate`:
 
 ```bash
 cd api && bun run gate        # tsc + bun test
@@ -71,8 +71,7 @@ npm run gate
 BUN_BIN="npx --yes bun@1.4.4" npm run gate
 ```
 
-`lefthook.yml` at the root runs commitlint on `commit-msg` and the full gate on
-`pre-push`.
+`lefthook.yml` runs commitlint on `commit-msg` and the full gate on `pre-push`.
 
 ## Environment
 
@@ -81,51 +80,52 @@ BUN_BIN="npx --yes bun@1.4.4" npm run gate
 | Variable | Required | Example / notes |
 | --- | --- | --- |
 | `DATABASE_URL` | yes | `./links.db` (SQLite file) |
-| `BETTER_AUTH_URL` | yes | `https://api.links.sam1.space` |
-| `BETTER_AUTH_SECRET` | yes | long random string |
+| `BETTER_AUTH_URL` | yes | Public API origin |
+| `BETTER_AUTH_SECRET` | yes | Long random string |
 | `GOOGLE_CLIENT_ID` | yes | Google OAuth web client |
 | `GOOGLE_CLIENT_SECRET` | yes | Google OAuth web client |
-| `TRUSTED_ORIGINS` | yes | comma-separated browser origins, e.g. `https://links.sam1.space` (CORS + better-auth) |
+| `TRUSTED_ORIGINS` | yes | Comma-separated web origin and `linx://` (CORS + better-auth) |
 
-Google redirect URI:
-`https://api.links.sam1.space/api/auth/callback/google` (plus
-`http://localhost:3000/api/auth/callback/google` for local dev).
+Register the `/api/auth/callback/google` path on the production API origin as a
+Google redirect URI, and add the local API origin for development.
 
 ### web (`web/.env.local`)
 
 | Variable | Required | Example / notes |
 | --- | --- | --- |
-| `NEXT_PUBLIC_API_URL` | yes | `https://api.links.sam1.space`; inlined at build time |
+| `NEXT_PUBLIC_API_URL` | yes | API origin; inlined at build time |
 
-The API must list the web origin in `TRUSTED_ORIGINS`. Keep web and API on the
-same registrable domain so the better-auth session cookie is same-site.
+The API must list the web origin in `TRUSTED_ORIGINS`. Keep the web and API
+hostnames on the same registrable domain so the better-auth session cookie is
+same-site.
 
 ### app (`app/.env` optional)
 
 | Variable | Required | Example / notes |
 | --- | --- | --- |
-| `EXPO_PUBLIC_API_URL` | no | defaults to `https://api.links.sam1.space` |
+| `EXPO_PUBLIC_API_URL` | no | API origin; defaults to the production API origin in `app/lib/auth-client.ts` |
 
-Authentication is Google via better-auth. The Expo plugin opens the flow in
-`expo-web-browser` and returns to the `linx://` deep link, so that scheme must
-be listed in the API's `TRUSTED_ORIGINS`. The app sends the resulting session
+The app signs in with Google through better-auth. The Expo plugin opens the
+flow in `expo-web-browser` and returns to the `linx://` deep link, so that
+scheme must be listed in the API's `TRUSTED_ORIGINS`. The app sends the session
 token as `Authorization: Bearer <token>` to `/admin/link/*`.
 
 ## CI / deploy
 
-- `.github/workflows/api-ci.yml` — `api/**`: bun install, migrate, typecheck, tests.
-- `.github/workflows/web-deploy.yml` — `web/**`: npm ci, typecheck, test,
-  OpenNext build + Cloudflare deploy. Needs `CLOUDFLARE_API_TOKEN` (secret) and
-  `CLOUDFLARE_ACCOUNT_ID`, `NEXT_PUBLIC_API_URL` (variables).
-- `.github/workflows/app-android.yml` — `app/**`: Node 24, Temurin 21, Expo
-  SDK 58 prebuild, Gradle release APK artifact.
+- `.github/workflows/api-ci.yml` runs on `api/**`: bun install, migrate,
+  typecheck, tests.
+- `.github/workflows/web-deploy.yml` runs on `web/**`: npm ci, typecheck, test,
+  OpenNext build, Cloudflare deploy. It needs `CLOUDFLARE_API_TOKEN` (secret)
+  and `CLOUDFLARE_ACCOUNT_ID`, `NEXT_PUBLIC_API_URL` (variables).
+- `.github/workflows/app-android.yml` runs on `app/**`: Node 24, Temurin 21,
+  Expo SDK 58 prebuild, Gradle release APK artifact.
 
-`web/wrangler.jsonc` binds `links.sam1.space`. Change the route if the domain
-differs.
+`web/wrangler.jsonc` binds the production web hostname. Change the route there
+if the hostname changes.
 
 ## Follow-ups
 
-- The mono-repo handoff to ops: the server checkout moves from the old repo
-  root to `links/api` (systemd `WorkingDirectory` and `ExecStart`), and the
-  canonical `api/src/lib/auth.ts` needs the `expo()` + `bearer()` plugins.
-  Exact steps are in `STATUS.md`.
+- The server checkout moves from the old repository root to `links/api`
+  (systemd `WorkingDirectory` and `ExecStart`), and the canonical
+  `api/src/lib/auth.ts` needs the `expo()` and `bearer()` plugins. Exact steps
+  are in `STATUS.md`.

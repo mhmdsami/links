@@ -1,42 +1,39 @@
 # Linx
 
-Client for [links](https://github.com/mhmdsami/links) to manage a link collection. Built with [Expo](https://expo.dev)
+Expo client for the links service. It manages a link collection from a phone
+and signs in with Google through better-auth.
 
-<img src="https://github.com/user-attachments/assets/635b911b-1857-4d65-a53a-eaf2bd873703" alt="config screen" width="32%" />
-<img src="https://github.com/user-attachments/assets/1cd6f972-b493-42bc-9ae0-0e085197ae06" alt="create screen" width="32%" />
-<img src="https://github.com/user-attachments/assets/9645da4c-2500-4dc3-b7db-012bf1cc25fe" alt="links screen" width="32%" />
-
-### To install dependencies:
+## Install
 
 ```sh
 npm install
 ```
 
-### Requirements
+## Requirements
 
 - Node.js 24.x LTS (`.nvmrc` = `24`)
 - Expo SDK 58 (React Native 0.88.1, React 19.3.0)
-- TypeScript 6.0.3 (Expo SDK 58 pins `~6.0.3`; TypeScript 7 is not used here)
+- TypeScript 6.0.3, which the Expo SDK 58 template pins as `~6.0.3`;
+  TypeScript 7 is not used here
 
-### Development setup:
+## Development
 
-- Set up the [development environment](https://docs.expo.dev/get-started/set-up-your-environment/) for running expo
-
-- Start the devlopment server
+Set up the Expo development environment, then start the dev server:
 
 ```sh
 npm start
 ```
 
-### Auth
+## Auth
 
-The app signs in with Google through better-auth (`app/lib/auth-client.ts`).
-The Expo client plugin opens the flow in `expo-web-browser` and returns via the
-`linx://` scheme; the session token is kept in SecureStore and sent to the API
-as `Authorization: Bearer <token>`. Point the app at another API with
-`EXPO_PUBLIC_API_URL` (defaults to `https://api.links.sam1.space`).
+The app signs in with Google through better-auth in `app/lib/auth-client.ts`.
+The Expo client plugin opens the flow in `expo-web-browser` and returns through
+the `linx://` scheme. The session token is kept in SecureStore and sent to the
+API as `Authorization: Bearer <token>`. Point the app at another API with
+`EXPO_PUBLIC_API_URL`; otherwise it uses the production API origin configured in
+`app/lib/auth-client.ts`.
 
-### Checks
+## Checks
 
 ```sh
 npm run types   # tsc --noEmit
@@ -44,18 +41,18 @@ npm run lint    # eslint
 npm run gate    # types && lint
 ```
 
-Hooks live at the repository root (`lefthook.yml`): `commit-msg` runs
-commitlint, `pre-push` runs the monorepo gate. Install once with
-`npm run hooks:install` at the root.
+Hooks live at the repository root in `lefthook.yml`: `commit-msg` runs
+commitlint and `pre-push` runs the monorepo gate. Install them once with
+`npm run hooks:install` from the root.
 
-### Android release build
+## Android release build
 
-`.github/workflows/app-android.yml` at the repo root builds a release APK on
-pushes that touch `app/**` (and on manual dispatch): Node 24, Temurin JDK 21,
-`npm ci`, `npx expo prebuild --platform android --clean`, then
+`.github/workflows/app-android.yml` at the repository root builds a release APK
+on pushes that touch `app/**` and on manual dispatch. It uses Node 24, Temurin
+JDK 21, `npm ci`, `npx expo prebuild --platform android --clean`, then
 `./gradlew assembleRelease`. Expo SDK 58 generates Gradle 9.4.1, which supports
 JDK 21. The APK is uploaded as the `links-app-release-apk` artifact. No signing
-keystore is configured, so Expo's default debug signing is used — add a release
-keystore before distributing.
+keystore is configured, so the build uses Expo's default debug signing. Add a
+release keystore before distributing.
 
-The app uses npm (`package-lock.json`); there is no Bun lockfile in `app/`.
+The app uses npm (`package-lock.json`) and has no Bun lockfile.
