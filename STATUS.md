@@ -126,7 +126,7 @@ commit rather than the full per-commit history.
 - CI lives at `.github/workflows/app-android.yml` (Node 24, Temurin 21).
 - Auth uses better-auth sessions instead of a domain plus `ADMIN_TOKEN`:
   - `app/lib/auth-client.ts` creates the client with the `@better-auth/expo`
-    plugin (`scheme: "linx"`, SecureStore cookie jar). The base URL comes from
+    plugin (`scheme: "links"`, SecureStore cookie jar). The base URL comes from
     `EXPO_PUBLIC_API_URL`.
   - `app/lib/session.ts` extracts the signed session cookie, stores it under
     `STORAGE_KEYS.TOKEN`, and builds the bearer header. On startup it deletes
@@ -199,7 +199,7 @@ The code is pushed. On the server:
 3. Set `api/.env`:
    - `DATABASE_URL`, `BETTER_AUTH_URL` (public API origin),
      `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
-   - `TRUSTED_ORIGINS` to the production web origin plus `linx://`. Add the
+   - `TRUSTED_ORIGINS` to the production web origin plus `links://`. Add the
      local web origin only when the web app runs locally against this API. Add
      `exp://**` only for Expo Go development.
 4. Apply the routes patch if it is not already applied:
@@ -243,7 +243,7 @@ API's `/api/auth/callback/google` web redirect.
 - The app depends on the new API plugins (`bearer`, `expo`). Until the API is
   deployed and the server `src/lib/auth.ts` is updated, app sign-in and admin
   requests fail. The web dashboard is unaffected.
-- The `linx://` scheme must be in the API's `TRUSTED_ORIGINS`. Otherwise the
+- The `links://` scheme must be in the API's `TRUSTED_ORIGINS`. Otherwise the
   Expo plugin will not append the session cookie to the deep-link redirect.
 - `.npmrc` uses `legacy-peer-deps` because better-call peers zod 4 while the app
   uses zod 3. Revisit when that optional peer is relaxed.

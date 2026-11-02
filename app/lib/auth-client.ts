@@ -13,15 +13,15 @@ export const API_URL = (
  * better-auth client for the native app.
  *
  * The Expo plugin opens Google in `expo-web-browser`, receives the deep-link
- * callback on the `linx://` scheme, and persists the session cookie in
+ * callback on the `links://` scheme, and persists the session cookie in
  * SecureStore.
  */
 export const authClient = createAuthClient({
   baseURL: API_URL,
   plugins: [
     expoClient({
-      scheme: "linx",
-      storagePrefix: "linx",
+      scheme: "links",
+      storagePrefix: "links",
       storage: SecureStore,
     }),
   ],

@@ -1,4 +1,4 @@
-# Linx
+# Links
 
 Expo client for the links service. It manages a link collection from a phone
 and signs in with Google through better-auth.
@@ -28,7 +28,7 @@ npm start
 
 The app signs in with Google through better-auth in `app/lib/auth-client.ts`.
 The Expo client plugin opens the flow in `expo-web-browser` and returns through
-the `linx://` scheme. The session token is kept in SecureStore and sent to the
+the `links://` scheme. The session token is kept in SecureStore and sent to the
 API as `Authorization: Bearer <token>`. Point the app at another API with
 `EXPO_PUBLIC_API_URL`; otherwise it uses the production API origin configured in
 `app/lib/auth-client.ts`.

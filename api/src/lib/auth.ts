@@ -29,7 +29,7 @@ export const auth = betterAuth({
     .map((origin) => origin.trim())
     .filter(Boolean),
   plugins: [
-    // Deep-link handoff for the Expo app (linx://) and bearer-token sessions
+    // Deep-link handoff for the Expo app (links://) and bearer-token sessions
     // for native clients that cannot use host-only cookies.
     expo(),
     bearer(),

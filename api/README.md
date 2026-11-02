@@ -50,7 +50,7 @@ Environment:
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`: Google OAuth web client.
 - `TRUSTED_ORIGINS`: comma-separated origins allowed to call the API
   cross-origin, covering CORS with credentials and better-auth trusted origins.
-  Include the web origin and the app scheme `linx://`.
+  Include the web origin and the app scheme `links://`.
 
 Register the `/api/auth/callback/google` path on the production API origin as a
 Google redirect URI, and add the local API origin for development.

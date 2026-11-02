@@ -1,22 +1,22 @@
 {
   "expo": {
-    "name": "Linx",
-    "slug": "linx",
+    "name": "Links",
+    "slug": "links",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "linx",
+    "scheme": "links",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.sami.linx"
+      "bundleIdentifier": "com.sami.links"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0D1117"
       },
-      "package": "com.sami.linx"
+      "package": "com.sami.links"
     },
     "web": {
       "bundler": "metro",

@@ -84,7 +84,7 @@ BUN_BIN="npx --yes bun@1.4.4" npm run gate
 | `BETTER_AUTH_SECRET` | yes | Long random string |
 | `GOOGLE_CLIENT_ID` | yes | Google OAuth web client |
 | `GOOGLE_CLIENT_SECRET` | yes | Google OAuth web client |
-| `TRUSTED_ORIGINS` | yes | Comma-separated web origin and `linx://` (CORS + better-auth) |
+| `TRUSTED_ORIGINS` | yes | Comma-separated web origin and `links://` (CORS + better-auth) |
 
 Register the `/api/auth/callback/google` path on the production API origin as a
 Google redirect URI, and add the local API origin for development.
@@ -106,7 +106,7 @@ same-site.
 | `EXPO_PUBLIC_API_URL` | no | API origin; defaults to the production API origin in `app/lib/auth-client.ts` |
 
 The app signs in with Google through better-auth. The Expo plugin opens the
-flow in `expo-web-browser` and returns to the `linx://` deep link, so that
+flow in `expo-web-browser` and returns to the `links://` deep link, so that
 scheme must be listed in the API's `TRUSTED_ORIGINS`. The app sends the session
 token as `Authorization: Bearer <token>` to `/admin/link/*`.
 
