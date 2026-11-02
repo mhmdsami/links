@@ -27,7 +27,7 @@ export function HomeClient() {
     return (
       <div className="flex min-h-dvh items-center justify-center text-sm text-muted-foreground">
         <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
-        Checking your session…
+        Loading…
       </div>
     );
   }

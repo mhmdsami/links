@@ -5,7 +5,6 @@ import {
   Check,
   Copy,
   ExternalLink,
-  Link2,
   Loader2,
   MousePointerClick,
   Pencil,
@@ -14,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -78,8 +77,6 @@ export function Dashboard({ user }: { user: SessionUser }) {
   useEffect(() => {
     void load();
   }, [load]);
-
-  const totalClicks = useMemo(() => links.reduce((sum, link) => sum + (link.clicks ?? 0), 0), [links]);
 
   async function onCreate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -177,8 +174,8 @@ export function Dashboard({ user }: { user: SessionUser }) {
 
   return (
     <div className="min-h-dvh">
-      <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur">
-        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-5 sm:px-8">
+      <header className="sticky top-0 z-30 border-b border-border bg-background">
+        <div className="mx-auto flex h-14 w-full max-w-4xl items-center justify-between gap-4 px-4">
           <Logo />
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex min-w-0 items-center gap-2">
@@ -204,20 +201,11 @@ export function Dashboard({ user }: { user: SessionUser }) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-5xl px-5 py-8 sm:px-8 sm:py-12">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="eyebrow mb-2">Workspace</div>
-            <h1 className="page-title">Links</h1>
-            <p className="mt-1.5 text-[13px] text-muted-foreground">
-              <span className="font-mono tabular-nums text-foreground/80">{formatCount(links.length)}</span> links ·{" "}
-              <span className="font-mono tabular-nums text-foreground/80">{formatCount(totalClicks)}</span> clicks
-            </p>
-          </div>
-        </div>
+      <main className="mx-auto w-full max-w-4xl px-4 py-8">
+        <h1 className="text-xl font-semibold">Links</h1>
 
-        <Card className="mb-8">
-          <form onSubmit={onCreate} className="grid gap-4 p-5 md:grid-cols-[minmax(0,1fr)_200px_auto] md:items-end">
+        <Card className="mb-6 mt-4">
+          <form onSubmit={onCreate} className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_180px_auto] md:items-end">
             <div className="space-y-2">
               <Label htmlFor="destination">Destination URL</Label>
               <Input
@@ -272,7 +260,7 @@ export function Dashboard({ user }: { user: SessionUser }) {
           {formError && (
             <div
               role="alert"
-              className="mx-5 mb-5 flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-[13px] text-destructive"
+              className="mx-4 mb-4 flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[13px] text-destructive"
             >
               <AlertCircle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
               <span>{formError}</span>
@@ -281,12 +269,12 @@ export function Dashboard({ user }: { user: SessionUser }) {
         </Card>
 
         {loading ? (
-          <div className="flex items-center justify-center rounded-xl border border-dashed border-border py-20 text-sm text-muted-foreground">
+          <div className="flex items-center justify-center rounded-md border border-dashed border-border py-12 text-sm text-muted-foreground">
             <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
             Loading links…
           </div>
         ) : loadError ? (
-          <div className="flex flex-col items-center gap-4 rounded-xl border border-destructive/40 bg-destructive/5 px-6 py-16 text-center">
+          <div className="flex flex-col items-center gap-4 rounded-md border border-destructive/40 bg-destructive/5 px-6 py-12 text-center">
             <AlertCircle className="size-5 text-destructive" aria-hidden />
             <div>
               <p className="text-sm font-medium">Could not load links</p>
@@ -297,26 +285,21 @@ export function Dashboard({ user }: { user: SessionUser }) {
             </Button>
           </div>
         ) : links.length === 0 ? (
-          <div className="flex flex-col items-center rounded-xl border border-dashed border-border px-6 py-20 text-center">
-            <div className="flex size-12 items-center justify-center rounded-xl border border-border bg-card shadow-card">
-              <Link2 className="size-5 text-muted-foreground" aria-hidden />
-            </div>
-            <p className="mt-4 text-sm font-medium">No links yet</p>
-            <p className="mt-1 max-w-xs text-[13px] text-muted-foreground">
-              Create your first short link above. Redirects are served by the API, not this dashboard.
-            </p>
+          <div className="rounded-md border border-dashed border-border px-6 py-12 text-center">
+            <p className="text-sm font-medium">No links yet</p>
+            <p className="mt-1 text-sm text-muted-foreground">Create one above.</p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
+          <div className="overflow-hidden rounded-md border border-border bg-card">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[720px] border-collapse text-left">
                 <thead>
-                  <tr className="border-b border-border text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground">
-                    <th scope="col" className="px-5 py-3 font-medium">Code</th>
-                    <th scope="col" className="px-5 py-3 font-medium">Destination</th>
-                    <th scope="col" className="px-5 py-3 font-medium text-right">Clicks</th>
-                    <th scope="col" className="px-5 py-3 font-medium">Created</th>
-                    <th scope="col" className="px-5 py-3 font-medium text-right">Actions</th>
+                  <tr className="border-b border-border text-xs text-muted-foreground">
+                    <th scope="col" className="px-4 py-2.5 font-medium">Code</th>
+                    <th scope="col" className="px-4 py-2.5 font-medium">Destination</th>
+                    <th scope="col" className="px-4 py-2.5 font-medium text-right">Clicks</th>
+                    <th scope="col" className="px-4 py-2.5 font-medium">Created</th>
+                    <th scope="col" className="px-4 py-2.5 font-medium text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -325,11 +308,11 @@ export function Dashboard({ user }: { user: SessionUser }) {
                     const isBusy = busyCode === link.code;
 
                     return (
-                      <tr key={link.id} className="border-b border-border/70 last:border-b-0 hover:bg-white/[0.015]">
-                        <td className="px-5 py-3 align-top">
+                      <tr key={link.id} className="border-b border-border last:border-b-0">
+                        <td className="px-4 py-3 align-top">
                           <span className="font-mono text-[13px] text-foreground">/{link.code}</span>
                         </td>
-                        <td className="max-w-[340px] px-5 py-3 align-top">
+                        <td className="max-w-[340px] px-4 py-3 align-top">
                           {isEditing ? (
                             <div className="space-y-1.5">
                               <Input
@@ -360,16 +343,16 @@ export function Dashboard({ user }: { user: SessionUser }) {
                             </a>
                           )}
                         </td>
-                        <td className="px-5 py-3 align-top text-right">
+                        <td className="px-4 py-3 align-top text-right">
                           <span className="inline-flex items-center gap-1 font-mono text-[13px] tabular-nums text-foreground/85">
                             <MousePointerClick className="size-3 text-muted-foreground" aria-hidden />
                             {formatCount(link.clicks ?? 0)}
                           </span>
                         </td>
-                        <td className="whitespace-nowrap px-5 py-3 align-top text-[12.5px] text-muted-foreground">
+                        <td className="whitespace-nowrap px-4 py-3 align-top text-[12.5px] text-muted-foreground">
                           {formatDate(link.createdAt)}
                         </td>
-                        <td className="px-5 py-3 align-top">
+                        <td className="px-4 py-3 align-top">
                           <div className="flex items-center justify-end gap-1">
                             {isEditing ? (
                               <>

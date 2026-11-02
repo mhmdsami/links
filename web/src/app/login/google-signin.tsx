@@ -12,9 +12,10 @@ export function GoogleSignIn({ callbackURL = "/" }: { callbackURL?: string }) {
   async function signIn() {
     setBusy(true);
     setError(null);
+    const target = callbackURL.startsWith("http") ? callbackURL : `${window.location.origin}${callbackURL}`;
     const { error: signInError } = await authClient.signIn.social({
       provider: "google",
-      callbackURL,
+      callbackURL: target,
     });
     if (signInError) {
       setError(signInError.message ?? "Could not start Google sign-in.");

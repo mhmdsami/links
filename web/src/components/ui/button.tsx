@@ -5,10 +5,10 @@ type Variant = "default" | "outline" | "ghost" | "destructive";
 type Size = "default" | "sm" | "icon";
 
 const variants: Record<Variant, string> = {
-  default: "bg-primary text-primary-foreground shadow-card hover:bg-white",
-  outline: "border border-border bg-white/[0.025] hover:border-white/25 hover:bg-accent",
+  default: "bg-primary text-primary-foreground hover:bg-[#2ea043]",
+  outline: "border border-border bg-transparent hover:bg-accent",
   ghost: "hover:bg-accent",
-  destructive: "bg-destructive text-destructive-foreground shadow-card hover:bg-destructive/90",
+  destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
 };
 
 const sizes: Record<Size, string> = {
@@ -28,7 +28,7 @@ export function Button({
     <button
       type={type}
       className={cn(
-        "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-[background-color,border-color,color,opacity,transform,box-shadow] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] disabled:pointer-events-none disabled:opacity-45 [&_svg]:size-4 [&_svg]:shrink-0",
+        "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-45 [&_svg]:size-4 [&_svg]:shrink-0",
         variants[variant],
         sizes[size],
         className
