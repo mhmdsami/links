@@ -2,6 +2,7 @@ import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { bearer } from "better-auth/plugins";
+import * as schema from "../schema/auth";
 import db from "../utils/db";
 
 /**
@@ -16,7 +17,7 @@ import db from "../utils/db";
 export const auth = betterAuth({
   baseURL: Bun.env.BETTER_AUTH_URL ?? "http://localhost:3000",
   secret: Bun.env.BETTER_AUTH_SECRET,
-  database: drizzleAdapter(db, { provider: "sqlite" }),
+  database: drizzleAdapter(db, { provider: "sqlite", schema }),
   socialProviders: {
     google: {
       clientId: Bun.env.GOOGLE_CLIENT_ID ?? "",
