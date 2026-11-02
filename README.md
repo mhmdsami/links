@@ -127,5 +127,5 @@ if the hostname changes.
 
 - The server checkout moves from the old repository root to `links/api`
   (systemd `WorkingDirectory` and `ExecStart`), and the canonical
-  `api/src/lib/auth.ts` needs the `expo()` and `bearer()` plugins. Exact steps
-  are in `STATUS.md`.
+  `api/src/lib/auth.ts` needs the `expo()` and `bearer()` plugins. The exact
+  steps are in the private handoff notes.
