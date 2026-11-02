@@ -5,6 +5,7 @@ import {
   Check,
   Copy,
   ExternalLink,
+  Link2,
   Loader2,
   MousePointerClick,
   Pencil,
@@ -14,6 +15,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
@@ -202,8 +204,8 @@ export function Dashboard({ user }: { user: SessionUser }) {
       <main className="mx-auto w-full max-w-4xl px-4 py-8">
         <h1 className="text-2xl font-bold">Links</h1>
 
-        <div className="mb-6 mt-5">
-          <form onSubmit={onCreate} className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_180px_auto] md:items-end">
+        <Card className="mb-6 mt-5">
+          <form onSubmit={onCreate} className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_160px_auto] md:items-end">
             <div className="space-y-2">
               <Label htmlFor="destination">Destination URL</Label>
               <Input
@@ -264,7 +266,7 @@ export function Dashboard({ user }: { user: SessionUser }) {
               <span>{formError}</span>
             </div>
           )}
-        </div>
+        </Card>
 
         {loading ? (
           <div className="flex items-center justify-center rounded-md border border-dashed border-border py-12 text-sm text-muted-foreground">
@@ -283,8 +285,9 @@ export function Dashboard({ user }: { user: SessionUser }) {
             </Button>
           </div>
         ) : links.length === 0 ? (
-          <div className="rounded-md border border-dashed border-border px-6 py-12 text-center">
-            <p className="text-sm font-medium">No links yet</p>
+          <div className="rounded-md border border-border bg-card px-6 py-10 text-center">
+            <Link2 className="mx-auto size-5 text-muted-foreground" aria-hidden />
+            <p className="mt-3 text-sm font-medium">No links yet</p>
             <p className="mt-1 text-sm text-muted-foreground">Create one above.</p>
           </div>
         ) : (
@@ -366,6 +369,7 @@ export function Dashboard({ user }: { user: SessionUser }) {
                                 <Button
                                   size="icon"
                                   variant="ghost"
+                                  className="size-8 rounded-lg border border-border bg-[#010409]"
                                   onClick={() => setEditingCode(null)}
                                   disabled={saving}
                                   aria-label="Cancel edit"
@@ -391,6 +395,7 @@ export function Dashboard({ user }: { user: SessionUser }) {
                                 <Button
                                   size="icon"
                                   variant="ghost"
+                                  className="size-8 rounded-lg border border-border bg-[#010409]"
                                   onClick={() => setConfirmingCode(null)}
                                   disabled={deletingCode === link.code}
                                   aria-label="Cancel delete"
@@ -406,13 +411,14 @@ export function Dashboard({ user }: { user: SessionUser }) {
                                   onClick={() => void copy(link.code)}
                                   aria-label={copied === link.code ? "Copied" : `Copy short link for ${link.code}`}
                                   title="Copy short link"
-                                  className={cn(copied === link.code && "text-emerald-400")}
+                                  className={cn("size-8 rounded-lg border border-border bg-[#010409]", copied === link.code && "text-emerald-400")}
                                 >
                                   {copied === link.code ? <Check aria-hidden /> : <Copy aria-hidden />}
                                 </Button>
                                 <Button
                                   size="icon"
                                   variant="ghost"
+                                  className="size-8 rounded-lg border border-border bg-[#010409]"
                                   onClick={() => startEdit(link)}
                                   aria-label={`Edit ${link.code}`}
                                   title="Edit destination"
@@ -428,7 +434,7 @@ export function Dashboard({ user }: { user: SessionUser }) {
                                   }}
                                   aria-label={`Delete ${link.code}`}
                                   title="Delete link"
-                                  className="hover:text-destructive"
+                                  className="size-8 rounded-lg border border-border bg-[#010409] hover:text-destructive"
                                 >
                                   <Trash2 aria-hidden />
                                 </Button>

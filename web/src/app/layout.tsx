@@ -20,9 +20,21 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://links.sam1.space"),
   title: "links",
   description: "A short-link collection.",
   robots: { index: false, follow: false },
+  openGraph: {
+    title: "links",
+    description: "Short links, kept simple.",
+    siteName: "links",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "links",
+    description: "Short links, kept simple.",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
