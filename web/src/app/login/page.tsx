@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Logo } from "@/components/logo";
 import { authClient } from "@/lib/auth-client";
+import { LOCAL_PREVIEW } from "@/lib/local-preview";
 import { GoogleSignIn } from "./google-signin";
 
 export default function LoginPage() {
@@ -11,8 +12,10 @@ export default function LoginPage() {
   const { data, isPending } = authClient.useSession();
 
   useEffect(() => {
-    if (!isPending && data) router.replace("/");
+    if (LOCAL_PREVIEW || (!isPending && data)) router.replace("/");
   }, [data, isPending, router]);
+
+  if (LOCAL_PREVIEW) return null;
 
   return (
     <main className="relative flex min-h-dvh items-center justify-center overflow-hidden p-6">

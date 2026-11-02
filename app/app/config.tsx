@@ -1,6 +1,6 @@
 import Button from "@/components/button";
 import { COLORS } from "@/constants";
-import { API_URL, authClient } from "@/lib/auth-client";
+import { API_URL, LOCAL_PREVIEW, authClient } from "@/lib/auth-client";
 import { isSignedIn, persistSessionToken, signOut } from "@/lib/session";
 import { showInfo } from "@/utils";
 import { router } from "expo-router";
@@ -99,9 +99,11 @@ export default function Config() {
           >
             {session?.user?.email
               ? `Signed in as ${session.user.email}`
-              : signedIn
-                ? "Signed in"
-                : "Sign in with Google to manage your links."}
+              : LOCAL_PREVIEW
+                ? "Local preview, auth bypassed"
+                : signedIn
+                  ? "Signed in"
+                  : "Sign in with Google to manage your links."}
           </Text>
           <Text
             style={{
@@ -116,9 +118,11 @@ export default function Config() {
           {signedIn ? (
             <>
               <Button onPress={() => router.replace("/")}>My Links</Button>
-              <Button variant="destructive" onPress={handleSignOut}>
-                Sign Out
-              </Button>
+              {!LOCAL_PREVIEW && (
+                <Button variant="destructive" onPress={handleSignOut}>
+                  Sign Out
+                </Button>
+              )}
             </>
           ) : (
             <Button onPress={handleSignIn} disabled={isSigningIn}>

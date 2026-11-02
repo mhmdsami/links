@@ -1,6 +1,8 @@
 import { STORAGE_KEYS } from "@/constants";
 import * as SecureStore from "expo-secure-store";
-import { authClient } from "./auth-client";
+import { LOCAL_PREVIEW, authClient } from "./auth-client";
+
+const LOCAL_TOKEN = "local-preview";
 
 const SESSION_COOKIE_NAMES = [
   "better-auth.session_token",
@@ -42,14 +44,21 @@ export async function persistSessionToken(): Promise<string | null> {
 }
 
 export function getSessionToken(): string | null {
+  if (LOCAL_PREVIEW) {
+    return LOCAL_TOKEN;
+  }
   return SecureStore.getItem(STORAGE_KEYS.TOKEN);
 }
 
 export function isSignedIn(): boolean {
-  return !!getSessionToken();
+  return LOCAL_PREVIEW || !!getSessionToken();
 }
 
 export async function signOut() {
+  if (LOCAL_PREVIEW) {
+    return;
+  }
+
   try {
     await authClient.signOut();
   } catch (error) {

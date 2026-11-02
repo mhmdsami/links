@@ -25,6 +25,10 @@ origin.
 Keep the web app and API on the same registrable domain so the session cookie
 stays same-site and is sent with `credentials: "include"`.
 
+For local development without Google, point `NEXT_PUBLIC_API_URL` at the local
+API and set `NEXT_PUBLIC_LOCAL_PREVIEW=1`. The dashboard then uses a synthetic
+local user. The flag is ignored when the API origin is not local.
+
 ## Requirements
 
 - Node.js 24.x LTS (`engines.node: ">=24 <25"`, `.nvmrc` = `24`)

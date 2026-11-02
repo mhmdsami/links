@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { validator } from "hono/validator";
 import { auth } from "../lib/auth";
+import { isLocalPreview } from "../lib/local-preview";
 import { insertLinkSchema, link, updateLinkSchema } from "../schema";
 import db from "../utils/db";
 import { eq } from "drizzle-orm";
@@ -8,6 +9,10 @@ import { eq } from "drizzle-orm";
 const app = new Hono();
 
 app.use(async (c, next) => {
+  if (isLocalPreview()) {
+    return next();
+  }
+
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
   if (!session?.user) {
     return c.json({ success: false, message: "Unauthorized" }, { status: 401 });

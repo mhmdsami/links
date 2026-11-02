@@ -88,6 +88,7 @@ BUN_BIN="npx --yes bun@1.4.4" bun run gate
 | `GOOGLE_CLIENT_ID` | yes | Google OAuth web client |
 | `GOOGLE_CLIENT_SECRET` | yes | Google OAuth web client |
 | `TRUSTED_ORIGINS` | yes | Comma-separated web origin and `links://` (CORS + better-auth) |
+| `LOCAL_PREVIEW` | no | `1` bypasses auth on admin routes for local development |
 
 Register the `/api/auth/callback/google` path on the production API origin as a
 Google redirect URI, and add the local API origin for development.
@@ -97,6 +98,7 @@ Google redirect URI, and add the local API origin for development.
 | Variable | Required | Example / notes |
 | --- | --- | --- |
 | `NEXT_PUBLIC_API_URL` | yes | API origin; inlined at build time |
+| `NEXT_PUBLIC_LOCAL_PREVIEW` | no | `1` treats the browser as a local dev user |
 
 The API must list the web origin in `TRUSTED_ORIGINS`. Keep the web and API
 hostnames on the same registrable domain so the better-auth session cookie is
@@ -107,11 +109,19 @@ same-site.
 | Variable | Required | Example / notes |
 | --- | --- | --- |
 | `EXPO_PUBLIC_API_URL` | no | API origin; defaults to the production API origin in `app/lib/auth-client.ts` |
+| `EXPO_PUBLIC_LOCAL_PREVIEW` | no | `1` treats the app as a local dev user when the API origin is HTTP |
 
 The app signs in with Google through better-auth. The Expo plugin opens the
 flow in `expo-web-browser` and returns to the `links://` deep link, so that
 scheme must be listed in the API's `TRUSTED_ORIGINS`. The app sends the session
 token as `Authorization: Bearer <token>` to `/admin/link/*`.
+
+### Local preview
+
+Local development does not need Google. Set `LOCAL_PREVIEW=1` in `api/.env`,
+`NEXT_PUBLIC_LOCAL_PREVIEW=1` in `web/.env.local`, and optionally
+`EXPO_PUBLIC_LOCAL_PREVIEW=1` in `app/.env`. The bypass activates only when the
+API origin is local (HTTP), so an HTTPS deployment never uses it.
 
 ## CI / deploy
 

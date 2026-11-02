@@ -4,6 +4,7 @@ import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { LOCAL_PREVIEW } from "@/lib/local-preview";
 import { cn } from "@/lib/utils";
 
 export function SignOutButton({ compact = false }: { compact?: boolean }) {
@@ -20,6 +21,8 @@ export function SignOutButton({ compact = false }: { compact?: boolean }) {
       setBusy(false);
     }
   }
+
+  if (LOCAL_PREVIEW) return null;
 
   return (
     <button

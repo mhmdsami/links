@@ -10,6 +10,14 @@ export const API_URL = (
 ).replace(/\/+$/, "");
 
 /**
+ * Dev-only auth bypass. Enabled only with an explicit flag and an HTTP API
+ * origin, so a production build using HTTPS never activates it.
+ */
+export const LOCAL_PREVIEW =
+  process.env.EXPO_PUBLIC_LOCAL_PREVIEW === "1" &&
+  API_URL.startsWith("http://");
+
+/**
  * better-auth client for the native app.
  *
  * The Expo plugin opens Google in `expo-web-browser`, receives the deep-link
