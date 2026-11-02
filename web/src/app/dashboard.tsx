@@ -242,7 +242,6 @@ export function Dashboard({ user }: { user: SessionUser }) {
                 aria-describedby={errors.code ? "short-code-error" : undefined}
                 autoComplete="off"
                 spellCheck={false}
-                className="font-mono"
               />
               {errors.code && (
                 <p id="short-code-error" className="text-[12px] text-destructive">
@@ -311,7 +310,7 @@ export function Dashboard({ user }: { user: SessionUser }) {
                     return (
                       <tr key={link.id} className="border-b border-border last:border-b-0">
                         <td className="px-4 py-3 align-top">
-                          <span className="font-mono text-[13px] text-foreground">/{link.code}</span>
+                          <span className="font-medium text-[13px] text-foreground">/{link.code}</span>
                         </td>
                         <td className="max-w-[340px] px-4 py-3 align-top">
                           {isEditing ? (
@@ -345,7 +344,7 @@ export function Dashboard({ user }: { user: SessionUser }) {
                           )}
                         </td>
                         <td className="px-4 py-3 align-top text-right">
-                          <span className="inline-flex items-center gap-1 font-mono text-[13px] tabular-nums text-foreground/85">
+                          <span className="inline-flex items-center gap-1 text-[13px] tabular-nums text-foreground/85">
                             <MousePointerClick className="size-3 text-muted-foreground" aria-hidden />
                             {formatCount(link.clicks ?? 0)}
                           </span>

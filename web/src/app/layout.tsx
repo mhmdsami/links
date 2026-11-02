@@ -12,13 +12,6 @@ const monaSans = localFont({
   display: "swap",
 });
 
-const geistMono = localFont({
-  src: "./fonts/GeistMono-Variable.woff2",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-  display: "swap",
-});
-
 export const metadata: Metadata = {
   metadataBase: new URL("https://links.sam1.space"),
   title: "links",
@@ -39,7 +32,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${monaSans.variable} ${geistMono.variable}`}>
+    <html lang="en" className={monaSans.variable}>
       <body className="min-h-dvh bg-background text-foreground antialiased">{children}</body>
     </html>
   );
