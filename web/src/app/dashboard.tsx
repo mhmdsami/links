@@ -8,14 +8,12 @@ import {
   Loader2,
   MousePointerClick,
   Pencil,
-  Plus,
   Trash2,
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
@@ -202,9 +200,9 @@ export function Dashboard({ user }: { user: SessionUser }) {
       </header>
 
       <main className="mx-auto w-full max-w-4xl px-4 py-8">
-        <h1 className="text-xl font-semibold">Links</h1>
+        <h1 className="text-2xl font-bold">Links</h1>
 
-        <Card className="mb-6 mt-4">
+        <div className="mb-6 mt-5">
           <form onSubmit={onCreate} className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_180px_auto] md:items-end">
             <div className="space-y-2">
               <Label htmlFor="destination">Destination URL</Label>
@@ -251,8 +249,8 @@ export function Dashboard({ user }: { user: SessionUser }) {
               )}
             </div>
 
-            <Button type="submit" disabled={creating} className="h-9 md:mb-[1px]">
-              {creating ? <Loader2 className="animate-spin" aria-hidden /> : <Plus aria-hidden />}
+            <Button type="submit" disabled={creating} className="md:mb-[1px]">
+              {creating ? <Loader2 className="animate-spin" aria-hidden /> : null}
               Create
             </Button>
           </form>
@@ -266,7 +264,7 @@ export function Dashboard({ user }: { user: SessionUser }) {
               <span>{formError}</span>
             </div>
           )}
-        </Card>
+        </div>
 
         {loading ? (
           <div className="flex items-center justify-center rounded-md border border-dashed border-border py-12 text-sm text-muted-foreground">
