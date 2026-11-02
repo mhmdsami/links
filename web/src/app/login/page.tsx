@@ -1,21 +1,21 @@
-"use client";
-
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { Logo } from "@/components/logo";
-import { authClient } from "@/lib/auth-client";
+import { getSession } from "@/lib/auth-server";
 import { LOCAL_PREVIEW } from "@/lib/local-preview";
 import { GoogleSignIn } from "./google-signin";
 
-export default function LoginPage() {
-  const router = useRouter();
-  const { data, isPending } = authClient.useSession();
+export default async function LoginPage() {
+  if (LOCAL_PREVIEW) {
+    redirect("/");
+  }
 
-  useEffect(() => {
-    if (LOCAL_PREVIEW || (!isPending && data)) router.replace("/");
-  }, [data, isPending, router]);
+  const cookie = (await cookies()).toString();
+  const session = await getSession(cookie);
 
-  if (LOCAL_PREVIEW) return null;
+  if (session?.user) {
+    redirect("/");
+  }
 
   return (
     <main className="flex min-h-dvh items-center justify-center p-6">
