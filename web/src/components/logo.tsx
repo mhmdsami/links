@@ -15,20 +15,8 @@ function LogoMark({ className }: { className?: string }) {
         stroke="#30363d"
         strokeWidth="1.5"
       />
-      <path
-        d="M13.4 18.6a4 4 0 0 1 0-5.7l3-3a4 4 0 1 1 5.7 5.7l-1.6 1.6"
-        fill="none"
-        stroke="#f0f6fc"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M18.6 13.4a4 4 0 0 1 0 5.7l-3 3a4 4 0 1 1-5.7-5.7l1.6-1.6"
-        fill="none"
-        stroke="#8b949e"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
+      <rect x="8" y="11" width="16" height="4" rx="2" fill="#f0f6fc" />
+      <rect x="8" y="18" width="8" height="4" rx="2" fill="#8b949e" />
     </svg>
   );
 }
