@@ -15,7 +15,7 @@
   "routes": [{ "pattern": "links.sam1.space/api/*", "zone_name": "sam1.space" }],
   "vars": {
     "BETTER_AUTH_URL": "https://links.sam1.space/api/auth",
-    "TRUSTED_ORIGINS": "https://links.sam1.space"
+    "TRUSTED_ORIGINS": "https://links.sam1.space,links://"
   },
   "observability": {
     "enabled": true
