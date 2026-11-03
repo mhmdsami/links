@@ -16,6 +16,34 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const PAGE_SIZE = 100;
+
+async function fetchAllLinks(token: string): Promise<Link[]> {
+  const links: Link[] = [];
+  let offset = 0;
+  for (;;) {
+    const res = await fetch(
+      `${API_URL}/api/admin/link?limit=${PAGE_SIZE}&offset=${offset}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    if (!res.ok) {
+      throw new Error(`Request failed with ${res.status}`);
+    }
+
+    const body = await res.json();
+    const page = (body.data ?? []) as Link[];
+    links.push(...page);
+    if (!body.pagination?.hasMore || page.length === 0) break;
+    offset += page.length;
+  }
+  return links;
+}
+
 export default function Links() {
   const token = getSessionToken();
 
@@ -31,19 +59,7 @@ export default function Links() {
       }
 
       try {
-        const res = await fetch(`${API_URL}/api/admin/link/all`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!res.ok) {
-          throw new Error(`Request failed with ${res.status}`);
-        }
-
-        const body = await res.json();
-
-        return body.data as Link[];
+        return await fetchAllLinks(token);
       } catch (error) {
         console.error(error);
         return [] as Link[];

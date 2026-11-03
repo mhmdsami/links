@@ -21,19 +21,22 @@ export default function EditLink() {
 
   const token = getSessionToken();
 
-  const { data: links } = useQuery({
-    queryKey: [QUERY_KEYS.LINKS],
+  const { data: link } = useQuery({
+    queryKey: [QUERY_KEYS.LINKS, code],
     queryFn: async () => {
       if (!token) {
-        return [] as Link[];
+        return null;
       }
 
       try {
-        const res = await fetch(`${API_URL}/api/admin/link/all`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        const res = await fetch(
+          `${API_URL}/api/admin/link/${encodeURIComponent(String(code))}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
 
         if (!res.ok) {
           throw new Error(`Request failed with ${res.status}`);
@@ -41,13 +44,13 @@ export default function EditLink() {
 
         const body = await res.json();
 
-        return body.data as Link[];
+        return (body.data ?? null) as Link | null;
       } catch (error) {
         console.error(error);
-        return [] as Link[];
+        return null;
       }
     },
-    enabled: !!token,
+    enabled: !!token && !!code,
   });
 
   const queryClient = useQueryClient();
@@ -81,8 +84,6 @@ export default function EditLink() {
       showInfo(error.message);
     },
   });
-
-  const link = links?.find((link) => link.code === code);
 
   const updateLinkSchema = z.object({
     url: z.string().url(),
