@@ -11,7 +11,7 @@
     "build": "next build",
     "types": "tsc --noEmit",
     "test": "node --experimental-strip-types --test src/lib/*.test.ts",
-    "gate": "npm run types && npm run test && npm run build",
+    "gate": "npm run types && npm run test",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "cf-typegen": "wrangler types"

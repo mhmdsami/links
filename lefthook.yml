@@ -3,7 +3,7 @@ commit-msg:
     commitlint:
       run: npx commitlint --edit {1}
 
-pre-push:
+pre-commit:
   commands:
     gate:
-      run: bash scripts/gate.sh
+      run: bun run gate

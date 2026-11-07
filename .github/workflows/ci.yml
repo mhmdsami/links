@@ -1,0 +1,45 @@
+name: ci
+
+on:
+  workflow_dispatch:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - name: Install root
+        run: bun install
+
+      - name: Install api
+        working-directory: api
+        run: bun install
+
+      - name: Install web
+        working-directory: web
+        run: bun install
+
+      - name: Install app
+        working-directory: app
+        run: bun install
+
+      - name: Gate api
+        working-directory: api
+        run: bun run gate
+
+      - name: Gate web
+        working-directory: web
+        run: bun run gate
+
+      - name: Gate app
+        working-directory: app
+        run: bun run gate

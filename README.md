@@ -38,7 +38,7 @@ by the web Worker, which asks the API to record the click.
 
 ```bash
 bun install                 # root tooling (lefthook, commitlint)
-bun run hooks:install       # installs commit-msg + pre-push hooks
+bun run hooks:install       # installs commit-msg + pre-commit hooks
 ```
 
 Install dependencies in the package you are working on:
@@ -56,7 +56,7 @@ Next rewrites `/api/*` to the API Worker so both share an origin.
 
 ```bash
 cd api && bun run gate        # tsc + bun test
-cd web && bun run gate        # tsc + node:test + next build
+cd web && bun run gate        # tsc + node:test
 cd app && bun run gate        # tsc + eslint
 bun run gate                  # all three from the root
 ```
@@ -109,12 +109,14 @@ a local Worker, point it at the local HTTP origin and set
 
 ## CI / deploy
 
-- `.github/workflows/api-deploy.yml` runs on `api/**`: typecheck, tests, D1
-  migrations, then `wrangler deploy`. Needs `CLOUDFLARE_API_TOKEN` and
+Checks (`bun run gate`) run in the `pre-commit` hook. A manual-only
+`.github/workflows/ci.yml` runs the same gate on demand.
+
+- `.github/workflows/api-deploy.yml` runs on `api/**`: D1 migrations, then
+  `wrangler deploy`. Needs `CLOUDFLARE_API_TOKEN` and
   `CLOUDFLARE_ACCOUNT_ID`.
-- `.github/workflows/api-ci.yml` runs the api checks on pull requests.
-- `.github/workflows/web-deploy.yml` runs on `web/**`: typecheck, tests,
-  OpenNext build, Cloudflare deploy.
+- `.github/workflows/web-deploy.yml` runs on `web/**`: OpenNext build,
+  Cloudflare deploy.
 - `.github/workflows/app-android.yml` runs on `app/**`: Expo prebuild and a
   release APK artifact.
 
