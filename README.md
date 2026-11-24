@@ -109,16 +109,18 @@ a local Worker, point it at the local HTTP origin and set
 
 ## CI / deploy
 
-Checks (`bun run gate`) run in the `pre-commit` hook. A manual-only
-`.github/workflows/ci.yml` runs the same gate on demand.
+`.github/workflows/ci.yml` is the entrypoint. It runs:
 
-- `.github/workflows/api-deploy.yml` runs on `api/**`: D1 migrations, then
-  `wrangler deploy`. Needs `CLOUDFLARE_API_TOKEN` and
-  `CLOUDFLARE_ACCOUNT_ID`.
-- `.github/workflows/web-deploy.yml` runs on `web/**`: OpenNext build,
-  Cloudflare deploy.
-- `.github/workflows/app-android.yml` runs on `app/**`: Expo prebuild and a
-  release APK artifact.
+- `changes` — diffs the push and sets `api` / `web` flags, ignoring docs.
+- `gate` via `gate.yml` — installs and runs `bun run gate` per package.
+- `deploy-api` via `deploy-api.yml` — D1 migrations, then `wrangler deploy`.
+- `deploy-web` via `deploy-web.yml` — OpenNext build, Cloudflare deploy.
+
+Deploys need `gate` and only run on `main` when their flag is set. Needs
+`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+
+`.github/workflows/app-android.yml` runs on `app/**`: Expo prebuild and a
+release APK artifact.
 
 ## Follow-ups
 

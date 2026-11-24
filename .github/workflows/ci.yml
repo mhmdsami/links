@@ -1,4 +1,4 @@
-name: ci
+name: CI
 
 on:
   push:
@@ -6,43 +6,57 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  gate:
+  changes:
     runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.diff.outputs.api }}
+      web: ${{ steps.diff.outputs.web }}
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          fetch-depth: 0
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.4
+      - name: Detect app changes
+        id: diff
+        run: |
+          if [ "${{ github.event_name }}" != "push" ]; then
+            echo "api=true" >> "$GITHUB_OUTPUT"
+            echo "web=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          base="${{ github.event.before }}"
+          if [ -z "$base" ] || [[ "$base" =~ ^0+$ ]]; then
+            echo "api=true" >> "$GITHUB_OUTPUT"
+            echo "web=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed=$(git diff --name-only "$base" "${{ github.sha }}" | grep -vE '(^|/)docs/|\.md$' || true)
+          if printf '%s\n' "$changed" | grep -qE '^api/'; then
+            echo "api=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "api=false" >> "$GITHUB_OUTPUT"
+          fi
+          if printf '%s\n' "$changed" | grep -qE '^web/'; then
+            echo "web=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "web=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Install root
-        run: bun install
+  gate:
+    uses: ./.github/workflows/gate.yml
 
-      - name: Install api
-        working-directory: api
-        run: bun install
+  deploy-api:
+    needs: [gate, changes]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.changes.outputs.api == 'true'
+    uses: ./.github/workflows/deploy-api.yml
+    secrets: inherit
 
-      - name: Install web
-        working-directory: web
-        run: bun install
-
-      - name: Install app
-        working-directory: app
-        run: bun install
-
-      - name: Gate api
-        working-directory: api
-        run: bun run gate
-
-      - name: Gate web
-        working-directory: web
-        run: bun run gate
-
-      - name: Gate app
-        working-directory: app
-        run: bun run gate
+  deploy-web:
+    needs: [gate, changes]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.changes.outputs.web == 'true'
+    uses: ./.github/workflows/deploy-web.yml
+    secrets: inherit
